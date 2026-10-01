@@ -60,7 +60,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.between,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             CircleAvatar(
                               backgroundColor: Colors.white,
@@ -96,7 +96,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
                             child: Text(
@@ -155,7 +155,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
 
                       // Quantity Selector & Price Modifier
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Quantity',

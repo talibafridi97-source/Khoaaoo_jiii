@@ -131,7 +131,7 @@ class FoodCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Rs. ${food.price.toStringAsFixed(0)}',

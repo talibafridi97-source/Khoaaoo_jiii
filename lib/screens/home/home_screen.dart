@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // Top Section: Location & Profile Icons & Cart Button
               Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Popular Near You Section Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.between,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Popular Near You',

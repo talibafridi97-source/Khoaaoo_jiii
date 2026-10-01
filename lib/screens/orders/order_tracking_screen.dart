@@ -42,7 +42,7 @@ class OrderTrackingScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepOrange)),
                       Container(
@@ -73,7 +73,7 @@ class OrderTrackingScreen extends StatelessWidget {
                   ),
                   const Divider(height: 24),
                   const Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Total Amount (Cash on Delivery)', style: TextStyle(color: Colors.grey)),
                       Text('Rs. 1,049', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),

@@ -205,7 +205,7 @@ class _CartScreenState extends State<CartScreen> {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Subtotal', style: TextStyle(color: Colors.grey)),
                           Text('Rs. ${_cartProvider.subtotal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -213,7 +213,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       const SizedBox(height: 8),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Delivery Fee', style: TextStyle(color: Colors.grey)),
                           Text('Rs. ${_cartProvider.deliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -221,7 +221,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       const Divider(height: 24),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Total Amount', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                           Text(

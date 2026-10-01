@@ -95,7 +95,7 @@ class MyOrdersScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Container(
@@ -121,7 +121,7 @@ class MyOrdersScreen extends StatelessWidget {
           Text(date, style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
           const Divider(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
               Row(
