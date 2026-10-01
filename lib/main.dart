@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:khoaaoo_jiiii/screens/home/home_screen.dart';
+import 'screens/home/main_navigation.dart';
 
 void main() {
   runApp(const QuickBiteApp());
@@ -17,7 +17,7 @@ class QuickBiteApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const MainNavigation(),
     );
   }
 }
