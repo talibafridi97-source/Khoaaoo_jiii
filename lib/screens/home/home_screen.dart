@@ -5,6 +5,9 @@ import '../../models/category_model.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/food_card.dart';
+import '../food_details/food_details_screen.dart';
+import '../cart/cart_screen.dart';
+import '../../providers/cart_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,6 +20,23 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'All';
   String searchQuery = '';
   List<FoodModel> foodList = FoodData.foodItems;
+  final CartProvider _cartProvider = CartProvider();
+
+  @override
+  void initState() {
+    super.initState();
+    _cartProvider.addListener(_onCartChanged);
+  }
+
+  @override
+  void dispose() {
+    _cartProvider.removeListener(_onCartChanged);
+    super.dispose();
+  }
+
+  void _onCartChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Section: Location & Profile Icons
+              // Top Section: Location & Profile Icons & Cart Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.between,
                 children: [
@@ -69,25 +89,51 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Row(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              blurRadius: 6,
+                      // Cart Icon with Badge
+                      Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  blurRadius: 6,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.notifications_none, color: Colors.black87),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('No new notifications')),
-                            );
-                          },
-                        ),
+                            child: IconButton(
+                              icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                          if (_cartProvider.itemCount > 0)
+                            Positioned(
+                              right: 6,
+                              top: 6,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.deepOrange,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${_cartProvider.itemCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 10),
                       Container(
@@ -162,19 +208,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       discount: '20% OFF',
                       imagePath: 'assets/images/burger.jpg',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Zinger Deal selected!')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FoodDetailsScreen(food: FoodData.foodItems[2]),
+                          ),
                         );
                       },
                     ),
                     OfferCard(
-                      title: 'Special Biryani Special',
+                      title: 'Special Biryani Feast',
                       subtitle: 'Authentic chicken biryani combo',
                       discount: 'Rs. 100 OFF',
                       imagePath: 'assets/images/chicken_biryani.jpg',
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Biryani Deal selected!')),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FoodDetailsScreen(food: FoodData.foodItems[0]),
+                          ),
                         );
                       },
                     ),
@@ -264,11 +316,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         return FoodCard(
                           food: food,
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Tapped on ${food.name}')),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FoodDetailsScreen(food: food),
+                              ),
                             );
                           },
                           onAddPressed: () {
+                            _cartProvider.addItem(food);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Added ${food.name} to cart!')),
                             );
