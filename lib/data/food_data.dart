@@ -1,0 +1,87 @@
+import '../models/food_model.dart';
+import '../models/category_model.dart';
+
+class FoodData {
+  static final List<CategoryModel> categories = [
+    CategoryModel(id: 'c1', name: 'All', icon: 'assets/images/all.jpg'),
+    CategoryModel(id: 'c2', name: 'Biryani & Pulao', icon: 'assets/images/chicken_biryani.jpg'),
+    CategoryModel(id: 'c3', name: 'Fast Food', icon: 'assets/images/burger.jpg'),
+    CategoryModel(id: 'c4', name: 'BBQ & Karahi', icon: 'assets/images/bbq_karahi.jpg'),
+    CategoryModel(id: 'c5', name: 'Beverages', icon: 'assets/images/cold_drink.jpg'),
+  ];
+
+  static final List<FoodModel> foodItems = [
+    FoodModel(
+      id: 'f1',
+      name: 'Special Chicken Biryani',
+      description: 'Aromatic basmati rice cooked with tender chicken pieces, traditional Pakistani spices, saffron, and served with raita and salad.',
+      price: 599.00,
+      imageUrl: 'assets/images/chicken_biryani.jpg',
+      rating: 4.8,
+      deliveryTime: 25,
+      category: 'Biryani & Pulao',
+      isFavorite: true,
+      extras: ['Extra Raita', 'Extra Chicken Piece', 'Spicy Masala'],
+    ),
+    FoodModel(
+      id: 'f2',
+      name: 'Kabuli Pulao',
+      description: 'Traditional Afghan-Pakistani rice dish with succulent lamb shank, topped with caramelized carrots and raisins.',
+      price: 1200.00,
+      imageUrl: 'assets/images/kabuli_pulao.jpg',
+      rating: 4.9,
+      deliveryTime: 35,
+      category: 'Biryani & Pulao',
+      isFavorite: false,
+      extras: ['Extra Almonds & Raisins', 'Extra Lamb Piece', 'Mint Chutney'],
+    ),
+    FoodModel(
+      id: 'f3',
+      name: 'Zinger Burger Deluxe',
+      description: 'Crispy fried chicken breast fillet loaded with lettuce, cheese, special mayo sauce in a toasted sesame bun.',
+      price: 450.00,
+      imageUrl: 'assets/images/burger.jpg',
+      rating: 4.6,
+      deliveryTime: 20,
+      category: 'Fast Food',
+      isFavorite: true,
+      extras: ['Extra Cheese', 'Jalapenos', 'Double Patty', 'Extra Garlic Mayo'],
+    ),
+    FoodModel(
+      id: 'f4',
+      name: 'Chicken Malai Boti Karahi',
+      description: 'Juicy boneless chicken chunks cooked in rich creamy white butter gravy with green chillies and fresh coriander.',
+      price: 1450.00,
+      imageUrl: 'assets/images/bbq_karahi.jpg',
+      rating: 4.7,
+      deliveryTime: 40,
+      category: 'BBQ & Karahi',
+      isFavorite: false,
+      extras: ['Extra Roghani Naan', 'Extra Butter', 'Extra Salad'],
+    ),
+    FoodModel(
+      id: 'f5',
+      name: 'Refreshingly Cold Drink (500ml)',
+      description: 'Chilled carbonated soft drink to perfectly complement your spicy Pakistani meal.',
+      price: 150.00,
+      imageUrl: 'assets/images/cold_drink.jpg',
+      rating: 4.9,
+      deliveryTime: 15,
+      category: 'Beverages',
+      isFavorite: false,
+      extras: ['Ice Cubes', 'Lemon Slice'],
+    ),
+    FoodModel(
+      id: 'f6',
+      name: 'Seekh Kebab Roll',
+      description: 'Juicy beef seekh kebabs wrapped in soft paratha with onions, mint chutney, and signature sauce.',
+      price: 350.00,
+      imageUrl: 'assets/images/seekh_kebab.jpg',
+      rating: 4.5,
+      deliveryTime: 20,
+      category: 'Fast Food',
+      isFavorite: false,
+      extras: ['Extra Mayo Garlic', 'Extra Cheese', 'Spicy Chutney'],
+    ),
+  ];
+}
