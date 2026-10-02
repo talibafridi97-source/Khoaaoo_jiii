@@ -45,7 +45,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                 // Header Image with Back and Favorite buttons
                 Stack(
                   children: [
-                    Image.asset(
+                    Image.network(
                       widget.food.imageUrl,
                       height: 320,
                       width: double.infinity,
@@ -225,8 +225,8 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 

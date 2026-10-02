@@ -102,7 +102,7 @@ class _CartScreenState extends State<CartScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(
+                              child: Image.network(
                                 cartItem.foodItem.imageUrl,
                                 width: 70,
                                 height: 70,

@@ -45,7 +45,7 @@ class OfferCard extends StatelessWidget {
               bottom: -20,
               child: Opacity(
                 opacity: 0.2,
-                child: Image.asset(
+                child: Image.network(
                   imagePath,
                   width: 140,
                   height: 140,

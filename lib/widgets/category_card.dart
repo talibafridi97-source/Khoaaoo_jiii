@@ -40,7 +40,7 @@ class CategoryCard extends StatelessWidget {
             if (category.icon.isNotEmpty) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
+                child: Image.network(
                   category.icon,
                   width: 28,
                   height: 28,

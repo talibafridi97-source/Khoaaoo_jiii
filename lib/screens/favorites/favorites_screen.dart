@@ -60,7 +60,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     contentPadding: const EdgeInsets.all(12),
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
+                      child: Image.network(
                         food.imageUrl,
                         width: 70,
                         height: 70,
