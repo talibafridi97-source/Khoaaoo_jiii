@@ -226,7 +226,7 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
                     ],
                   ),
                 ],
-              ),
+              ],
             ),
           ),
 
