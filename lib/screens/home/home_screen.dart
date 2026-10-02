@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/food_data.dart';
 import '../../models/food_model.dart';
-import '../../models/category_model.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/food_card.dart';
@@ -206,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Zinger Deal Feast',
                       subtitle: 'Crispy burger with fries & drink',
                       discount: '20% OFF',
-                      imagePath: 'assets/images/burger.jpg',
+                      imagePath: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500',
                       onTap: () {
                         Navigator.push(
                           context,
@@ -220,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Special Biryani Feast',
                       subtitle: 'Authentic chicken biryani combo',
                       discount: 'Rs. 100 OFF',
-                      imagePath: 'assets/images/chicken_biryani.jpg',
+                      imagePath: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500',
                       onTap: () {
                         Navigator.push(
                           context,
