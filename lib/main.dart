@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home/main_navigation.dart';
+import 'screens/auth/login_screen.dart';
 
 void main() {
   runApp(const QuickBiteApp());
@@ -17,7 +17,7 @@ class QuickBiteApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      home: const LoginScreen(),
     );
   }
 }
