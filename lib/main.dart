@@ -5,10 +5,10 @@ import 'screens/auth/login_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Replace with your actual Supabase Project URL and Publishable Key from Supabase Dashboard -> Settings -> API
+  // Supabase Initialized with your project reference (nxnleneixjkbhybrkmaw)
   await Supabase.initialize(
-    url: 'https://xyzcompany.supabase.co',
-    publishableKey: 'your-supabase-publishable-key-here',
+    url: 'https://nxnleneixjkbhybrkmaw.supabase.co',
+    publishableKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54bmxlbmVpeGprYmh5YnJrbWF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjU1MjgsImV4cCI6MjEwNjg0MTUyOH0.NfNc8sxMih6nQUAanfkXOLh5Sws7I6YYY4j8Nq00Vzk', // TODO: Paste your long JWT anon/public key here from Supabase API settings
   );
 
   runApp(const QuickBiteApp());
