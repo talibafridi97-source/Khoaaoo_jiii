@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../providers/cart_provider.dart';
-import '../home/home_screen.dart';
+import '../../services/supabase_service.dart';
+import '../../models/order_model.dart';
+import '../home/main_navigation.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({Key? key}) : super(key: key);
@@ -11,13 +13,15 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(text: 'Ali Khan');
+  final TextEditingController _nameController = TextEditingController(text: 'Talib Nawaz');
   final TextEditingController _phoneController = TextEditingController(text: '+92 300 1234567');
   final TextEditingController _addressController = TextEditingController(text: 'House No. 42, Main Bazaar, Kohat City');
   final TextEditingController _notesController = TextEditingController();
 
   String selectedPaymentMethod = 'Cash on Delivery';
   final CartProvider _cartProvider = CartProvider();
+  final SupabaseService _supabaseService = SupabaseService();
+  bool _isPlacingOrder = false;
 
   @override
   void dispose() {
@@ -28,8 +32,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  void _placeOrder() {
+  void _placeOrder() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isPlacingOrder = true;
+      });
+
+      final orderId = '#QB${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+      
+      final order = OrderModel(
+        orderId: orderId,
+        items: _cartProvider.items,
+        totalAmount: _cartProvider.totalAmount,
+        deliveryAddress: _addressController.text,
+        status: 'Preparing',
+        timestamp: DateTime.now(),
+        paymentMethod: selectedPaymentMethod,
+      );
+
+      // Save to Supabase orders table
+      await _supabaseService.placeOrder(order);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isPlacingOrder = false;
+      });
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -55,14 +84,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Order #QB1024',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+                Text(
+                  'Order $orderId',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Estimated Delivery Time: 25-35 mins',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  'Estimated Delivery Time: 25-35 mins\nSaved to Supabase Database!',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -78,7 +107,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       _cartProvider.clearCart();
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        MaterialPageRoute(builder: (context) => const MainNavigation()),
                         (route) => false,
                       );
                     },
@@ -252,11 +281,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  onPressed: _placeOrder,
-                  child: const Text(
-                    'Place Order',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  onPressed: _isPlacingOrder ? null : _placeOrder,
+                  child: _isPlacingOrder
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Place Order',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],
