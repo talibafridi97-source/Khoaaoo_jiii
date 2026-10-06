@@ -35,4 +35,25 @@ class SupabaseService {
       return false;
     }
   }
+
+  // Fetch orders from Supabase orders table
+  Future<List<OrderModel>> fetchOrders() async {
+    try {
+      final response = await _client.from('orders').select();
+      return (response as List).map((json) {
+        return OrderModel(
+          orderId: json['order_id'] ?? '#QB1024',
+          items: [],
+          totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+          deliveryAddress: json['delivery_address'] ?? '',
+          status: json['status'] ?? 'Preparing',
+          timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
+          paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
+        );
+      }).toList();
+    } catch (e) {
+      print('Error fetching orders from Supabase: $e');
+      return [];
+    }
+  }
 }

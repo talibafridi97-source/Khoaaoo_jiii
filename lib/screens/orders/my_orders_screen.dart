@@ -1,11 +1,45 @@
 import 'package:flutter/material.dart';
+import '../../models/order_model.dart';
+import '../../services/supabase_service.dart';
 import 'order_tracking_screen.dart';
 
-class MyOrdersScreen extends StatelessWidget {
+class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({Key? key}) : super(key: key);
 
   @override
+  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
+
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  final SupabaseService _supabaseService = SupabaseService();
+  List<OrderModel> _orders = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final orders = await _supabaseService.fetchOrders();
+
+    if (!mounted) return;
+    setState(() {
+      _orders = orders;
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentOrders = _orders.where((o) => o.status != 'Delivered' && o.status != 'Cancelled').toList();
+    final previousOrders = _orders.where((o) => o.status == 'Delivered' || o.status == 'Cancelled').toList();
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -15,6 +49,12 @@ class MyOrdersScreen extends StatelessWidget {
           backgroundColor: Colors.white,
           elevation: 0,
           foregroundColor: Colors.black87,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.deepOrange),
+              onPressed: _loadOrders,
+            ),
+          ],
           bottom: const TabBar(
             labelColor: Colors.deepOrange,
             unselectedLabelColor: Colors.grey,
@@ -25,62 +65,43 @@ class MyOrdersScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            // Current Orders
-            ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildOrderCard(
-                  context,
-                  orderId: '#QB1024',
-                  itemsText: 'Special Chicken Biryani (x1), Cold Drink (x2)',
-                  amount: 'Rs. 899',
-                  date: 'Today, 02:15 PM',
-                  status: 'Preparing',
-                  canTrack: true,
-                ),
-              ],
-            ),
-            // Previous Orders
-            ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildOrderCard(
-                  context,
-                  orderId: '#QB1019',
-                  itemsText: 'Zinger Burger Deluxe (x2), Seekh Kebab Roll (x1)',
-                  amount: 'Rs. 1,250',
-                  date: 'Yesterday, 08:30 PM',
-                  status: 'Delivered',
-                  canTrack: false,
-                ),
-                _buildOrderCard(
-                  context,
-                  orderId: '#QB1002',
-                  itemsText: 'Kabuli Pulao (x1)',
-                  amount: 'Rs. 1,200',
-                  date: '25 Sep 2026, 01:20 PM',
-                  status: 'Delivered',
-                  canTrack: false,
-                ),
-              ],
-            ),
-          ],
-        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.deepOrange))
+            : TabBarView(
+                children: [
+                  // Current Orders
+                  currentOrders.isEmpty
+                      ? const Center(child: Text('No active current orders', style: TextStyle(color: Colors.grey)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: currentOrders.length,
+                          itemBuilder: (context, index) {
+                            final order = currentOrders[index];
+                            return _buildOrderCard(context, order, canTrack: true);
+                          },
+                        ),
+                  // Previous Orders
+                  previousOrders.isEmpty
+                      ? const Center(child: Text('No previous order history', style: TextStyle(color: Colors.grey)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: previousOrders.length,
+                          itemBuilder: (context, index) {
+                            final order = previousOrders[index];
+                            return _buildOrderCard(context, order, canTrack: false);
+                          },
+                        ),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildOrderCard(
-    BuildContext context, {
-    required String orderId,
-    required String itemsText,
-    required String amount,
-    required String date,
-    required String status,
-    required bool canTrack,
-  }) {
+  Widget _buildOrderCard(BuildContext context, OrderModel order, {required bool canTrack}) {
+    String itemsText = order.items.isNotEmpty
+        ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
+        : 'Delicious QuickBite Meal';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -95,19 +116,19 @@ class MyOrdersScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.between,
             children: [
-              Text(orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(order.orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: status == 'Preparing' ? Colors.orange.shade100 : Colors.green.shade100,
+                  color: order.status == 'Delivered' ? Colors.green.shade100 : Colors.orange.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  status,
+                  order.status,
                   style: TextStyle(
-                    color: status == 'Preparing' ? Colors.deepOrange : Colors.green.shade700,
+                    color: order.status == 'Delivered' ? Colors.green.shade700 : Colors.deepOrange,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -118,12 +139,15 @@ class MyOrdersScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(itemsText, style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
           const SizedBox(height: 8),
-          Text(date, style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+          Text(
+            '${order.timestamp.day}/${order.timestamp.month}/${order.timestamp.year} - ${order.paymentMethod}',
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+          ),
           const Divider(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.between,
             children: [
-              Text(amount, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
+              Text('Rs. ${order.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
               Row(
                 children: [
                   if (canTrack)
@@ -136,7 +160,7 @@ class MyOrdersScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => OrderTrackingScreen(orderId: orderId)),
+                          MaterialPageRoute(builder: (context) => OrderTrackingScreen(orderId: order.orderId)),
                         );
                       },
                       child: const Text('Track', style: TextStyle(color: Colors.deepOrange, fontSize: 13)),
