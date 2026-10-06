@@ -116,7 +116,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(order.orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Container(
@@ -145,7 +145,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           ),
           const Divider(height: 20),
           Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Rs. ${order.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
               Row(
