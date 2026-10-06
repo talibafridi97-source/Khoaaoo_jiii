@@ -13,9 +13,9 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(text: 'Talib Nawaz');
-  final TextEditingController _phoneController = TextEditingController(text: '+92 300 1234567');
-  final TextEditingController _addressController = TextEditingController(text: 'House No. 42, Main Bazaar, Kohat City');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   String selectedPaymentMethod = 'Cash on Delivery';
@@ -50,8 +50,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         paymentMethod: selectedPaymentMethod,
       );
 
-      // Save to Supabase orders table
-      await _supabaseService.placeOrder(order);
+      // Save to Supabase orders table with user entered name & phone
+      await _supabaseService.placeOrder(
+        order,
+        customerName: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
 
       if (!mounted) return;
 
@@ -148,6 +152,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Full Name',
+                  hintText: 'Enter your name',
                   prefixIcon: const Icon(Icons.person_outline, color: Colors.deepOrange),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -156,8 +161,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
+                  hintText: 'Enter your phone number',
                   prefixIcon: const Icon(Icons.phone_outlined, color: Colors.deepOrange),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -167,7 +174,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               TextFormField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  labelText: 'Delivery Address (e.g. Kohat)',
+                  labelText: 'Delivery Address',
+                  hintText: 'Enter your delivery address (e.g. Kohat)',
                   prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.deepOrange),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -179,6 +187,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 controller: _notesController,
                 decoration: InputDecoration(
                   labelText: 'Delivery Instructions (Optional)',
+                  hintText: 'e.g. Call upon arrival, extra spicy',
                   prefixIcon: const Icon(Icons.note_alt_outlined, color: Colors.deepOrange),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),

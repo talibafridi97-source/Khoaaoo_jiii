@@ -16,13 +16,13 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table
-  Future<bool> placeOrder(OrderModel order) async {
+  // Save order to Supabase orders table with dynamic customer name & phone
+  Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone}) async {
     try {
       await _client.from('orders').insert({
         'order_id': order.orderId,
-        'customer_name': 'Talib Nawaz',
-        'phone': '+92 300 1234567',
+        'customer_name': customerName,
+        'phone': phone,
         'delivery_address': order.deliveryAddress,
         'total_amount': order.totalAmount,
         'payment_method': order.paymentMethod,
