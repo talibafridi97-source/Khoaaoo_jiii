@@ -24,6 +24,18 @@ class FoodData {
       extras: ['Extra Raita', 'Extra Chicken Piece', 'Spicy Masala'],
     ),
     FoodModel(
+      id: 'f12',
+      name: 'Special Chicken Karahi Biryani',
+      description: 'A unique and mouth-watering fusion of spicy Chicken Karahi layered with aromatic traditional dum biryani rice, garnished with fried onions and mint.',
+      price: 650.00,
+      imageUrl: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=500',
+      rating: 4.9,
+      deliveryTime: 30,
+      category: 'Biryani & Pulao',
+      isFavorite: true,
+      extras: ['Extra Raita', 'Boiled Egg', 'Shami Kebab', 'Extra Salan'],
+    ),
+    FoodModel(
       id: 'f2',
       name: 'Kabuli Pulao',
       description: 'Traditional Afghan-Pakistani rice dish with succulent lamb shank, topped with caramelized carrots and raisins.',
