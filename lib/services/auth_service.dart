@@ -1,55 +1,63 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService extends ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final Map<String, String> _registeredUsers = {
-    'talib@quickbite.pk': '123456',
-    'admin': 'admin123',
-  };
+  final _supabase = Supabase.instance.client;
 
-  String _currentUserName = 'Talib Nawaz';
-  String _currentUserEmail = 'talib@quickbite.pk';
-  bool _isLoggedIn = false;
+  bool get isLoggedIn => _supabase.auth.currentSession != null;
 
-  bool get isLoggedIn => _isLoggedIn;
-  String get currentUserName => _currentUserName;
-  String get currentUserEmail => _currentUserEmail;
-
-  bool login(String identifier, String password) {
-    if (_registeredUsers.containsKey(identifier) && _registeredUsers[identifier] == password) {
-      _currentUserEmail = identifier;
-      _currentUserName = identifier.contains('@') ? identifier.split('@')[0] : identifier;
-      _isLoggedIn = true;
-      notifyListeners();
-      return true;
+  String get currentUserName {
+    final user = _supabase.auth.currentUser;
+    if (user != null && user.userMetadata != null) {
+      return user.userMetadata?['full_name'] ?? 'User';
     }
-    if (identifier.isNotEmpty && password.length >= 6) {
-      _currentUserEmail = identifier;
-      _currentUserName = identifier.contains('@') ? identifier.split('@')[0] : identifier;
-      _isLoggedIn = true;
-      notifyListeners();
-      return true;
-    }
-    return false;
+    return 'Talib Nawaz';
   }
 
-  bool signup(String name, String email, String password) {
-    if (email.isNotEmpty && password.length >= 6) {
-      _registeredUsers[email] = password;
-      _currentUserName = name;
-      _currentUserEmail = email;
-      _isLoggedIn = true;
-      notifyListeners();
-      return true;
-    }
-    return false;
+  String get currentUserEmail {
+    final user = _supabase.auth.currentUser;
+    return user?.email ?? 'talib@quickbite.pk';
   }
 
-  void logout() {
-    _isLoggedIn = false;
-    notifyListeners();
+  Future<bool> login(String email, String password) async {
+    try {
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      notifyListeners();
+      return response.session != null;
+    } catch (e) {
+      print('Supabase Login Error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> signup(String name, String email, String password) async {
+    try {
+      final response = await _supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': name},
+      );
+      notifyListeners();
+      return response.user != null;
+    } catch (e) {
+      print('Supabase Signup Error: $e');
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _supabase.auth.signOut();
+      notifyListeners();
+    } catch (e) {
+      print('Supabase Logout Error: $e');
+    }
   }
 }
