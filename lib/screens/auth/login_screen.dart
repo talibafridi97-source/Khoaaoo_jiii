@@ -25,30 +25,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 1), () {
-        bool success = _authService.login(_emailController.text.trim(), _passwordController.text);
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (success) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid email or password. Please try again.')),
-          );
-        }
+      bool success = await _authService.login(_emailController.text.trim(), _passwordController.text);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
       });
+
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid email or password. Please try again.')),
+        );
+      }
     }
   }
 

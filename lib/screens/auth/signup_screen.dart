@@ -26,35 +26,33 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  void _handleSignup() {
+  void _handleSignup() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 1), () {
-        bool success = _authService.signup(
-          _nameController.text.trim(),
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (success) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
-            (route) => false,
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Signup failed. Please check your details.')),
-          );
-        }
+      bool success = await _authService.signup(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
       });
+
+      if (success) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signup failed. Please check your details.')),
+        );
+      }
     }
   }
 
@@ -103,6 +101,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: _nameController,
                     decoration: InputDecoration(
                       labelText: 'Full Name',
+                      hintText: 'Enter your full name',
                       prefixIcon: const Icon(Icons.person_outline, color: Colors.deepOrange),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       focusedBorder: OutlineInputBorder(
@@ -117,6 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email Address',
+                      hintText: 'Enter your email',
                       prefixIcon: const Icon(Icons.email_outlined, color: Colors.deepOrange),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       focusedBorder: OutlineInputBorder(
@@ -132,6 +132,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      hintText: 'Enter your password (min 6 chars)',
                       prefixIcon: const Icon(Icons.lock_outline, color: Colors.deepOrange),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
