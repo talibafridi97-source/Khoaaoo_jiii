@@ -8,6 +8,7 @@ class OrderModel {
   final String status; // 'Pending', 'Preparing', 'On the Way', 'Delivered', 'Cancelled'
   final DateTime timestamp;
   final String paymentMethod; // 'Cash on Delivery', 'Credit Card'
+  final String itemsSummary;
 
   OrderModel({
     required this.orderId,
@@ -17,23 +18,25 @@ class OrderModel {
     required this.status,
     required this.timestamp,
     this.paymentMethod = 'Cash on Delivery',
+    this.itemsSummary = '',
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      orderId: json['_id'] ?? json['orderId'] ?? '',
+      orderId: json['_id'] ?? json['orderId'] ?? json['order_id'] ?? '',
       items: json['items'] != null
           ? (json['items'] as List)
               .map((item) => CartItemModel.fromJson(item))
               .toList()
           : [],
-      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
-      deliveryAddress: json['deliveryAddress'] ?? '',
+      totalAmount: (json['totalAmount'] ?? json['total_amount'] as num?)?.toDouble() ?? 0.0,
+      deliveryAddress: json['deliveryAddress'] ?? json['delivery_address'] ?? '',
       status: json['status'] ?? 'Pending',
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),
-      paymentMethod: json['paymentMethod'] ?? 'Cash on Delivery',
+      paymentMethod: json['paymentMethod'] ?? json['payment_method'] ?? 'Cash on Delivery',
+      itemsSummary: json['items_summary'] ?? '',
     );
   }
 
@@ -46,6 +49,7 @@ class OrderModel {
       'status': status,
       'timestamp': timestamp.toIso8601String(),
       'paymentMethod': paymentMethod,
+      'items_summary': itemsSummary,
     };
   }
 }

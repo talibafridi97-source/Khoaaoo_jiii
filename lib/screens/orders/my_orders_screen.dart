@@ -98,9 +98,11 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   Widget _buildOrderCard(BuildContext context, OrderModel order, {required bool canTrack}) {
-    String itemsText = order.items.isNotEmpty
-        ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
-        : 'Delicious QuickBite Meal';
+    String itemsText = order.itemsSummary.isNotEmpty
+        ? order.itemsSummary
+        : (order.items.isNotEmpty
+            ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
+            : 'Delicious QuickBite Meal');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

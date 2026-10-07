@@ -16,9 +16,14 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table with dynamic customer name & phone
+  // Save order to Supabase orders table with items summary
   Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone}) async {
     try {
+      // Build summary of items (e.g. "Special Chicken Biryani (x1), Cold Drink (x2)")
+      String itemsSummary = order.items.isNotEmpty
+          ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
+          : 'QuickBite Food Order';
+
       await _client.from('orders').insert({
         'order_id': order.orderId,
         'customer_name': customerName,
@@ -28,6 +33,7 @@ class SupabaseService {
         'payment_method': order.paymentMethod,
         'status': order.status,
         'timestamp': order.timestamp.toIso8601String(),
+        'items_summary': itemsSummary,
       });
       return true;
     } catch (e) {
@@ -49,6 +55,7 @@ class SupabaseService {
           status: json['status'] ?? 'Preparing',
           timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
+          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
         );
       }).toList();
     } catch (e) {
