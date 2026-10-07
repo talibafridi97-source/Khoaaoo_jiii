@@ -32,7 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = true;
       });
 
-      bool success = await _authService.signup(
+      String? error = await _authService.signup(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
@@ -42,7 +42,7 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = false;
       });
 
-      if (success) {
+      if (error == null) {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
@@ -50,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signup failed. Please check your details.')),
+          SnackBar(content: Text('Signup failed: $error')),
         );
       }
     }
