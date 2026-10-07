@@ -31,20 +31,20 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
 
-      bool success = await _authService.login(_emailController.text.trim(), _passwordController.text);
+      String? error = await _authService.login(_emailController.text.trim(), _passwordController.text);
       if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
 
-      if (success) {
+      if (error == null) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid email or password. Please try again.')),
+          SnackBar(content: Text('Login failed: ${error.contains("Invalid") || error.contains("credentials") ? "Invalid email or password" : error}')),
         );
       }
     }
@@ -87,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email or Username',
+                      hintText: 'Enter your email',
                       prefixIcon: const Icon(Icons.email_outlined, color: Colors.deepOrange),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       focusedBorder: OutlineInputBorder(
@@ -94,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderSide: const BorderSide(color: Colors.deepOrange, width: 2),
                       ),
                     ),
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter email or username' : null,
+                    validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -102,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
+                      hintText: 'Enter your password',
                       prefixIcon: const Icon(Icons.lock_outline, color: Colors.deepOrange),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),

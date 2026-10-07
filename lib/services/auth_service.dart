@@ -23,21 +23,21 @@ class AuthService extends ChangeNotifier {
     return user?.email ?? 'talib@quickbite.pk';
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<String?> login(String email, String password) async {
     try {
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
       notifyListeners();
-      return response.session != null;
+      return response.session != null ? null : 'Login failed';
     } catch (e) {
       print('Supabase Login Error: $e');
-      return false;
+      return e.toString();
     }
   }
 
-  Future<bool> signup(String name, String email, String password) async {
+  Future<String?> signup(String name, String email, String password) async {
     try {
       final response = await _supabase.auth.signUp(
         email: email,
@@ -45,10 +45,10 @@ class AuthService extends ChangeNotifier {
         data: {'full_name': name},
       );
       notifyListeners();
-      return response.user != null;
+      return response.user != null ? null : 'Signup failed';
     } catch (e) {
       print('Supabase Signup Error: $e');
-      return false;
+      return e.toString();
     }
   }
 
