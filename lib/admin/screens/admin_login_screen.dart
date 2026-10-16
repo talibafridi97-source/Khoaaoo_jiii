@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'admin_dashboard_screen.dart';
+import '../../services/auth_service.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({Key? key}) : super(key: key);
@@ -10,9 +11,10 @@ class AdminLoginScreen extends StatefulWidget {
 
 class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController(text: 'admin@quickbite.pk');
-  final TextEditingController _passwordController = TextEditingController(text: 'admin123');
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  final AuthService _authService = AuthService();
 
   @override
   void dispose() {
@@ -21,29 +23,32 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
     super.dispose();
   }
 
-  void _handleAdminLogin() {
+  void _handleAdminLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 1), () {
-        if (!mounted) return;
-        setState(() {
-          _isLoading = false;
-        });
+      String? error = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-        if (_emailController.text.trim() == 'admin@quickbite.pk' && _passwordController.text == 'admin123') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid Admin Credentials. Use admin@quickbite.pk / admin123')),
-          );
-        }
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
       });
+
+      if (error == null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Admin Login failed: $error')),
+        );
+      }
     }
   }
 
@@ -82,7 +87,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Restaurant Owner Dashboard',
+                  'Login with your Supabase Admin Account',
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 const SizedBox(height: 30),
@@ -90,6 +95,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'Admin Email',
+                    hintText: 'Enter admin email',
                     prefixIcon: const Icon(Icons.email, color: Colors.deepOrange),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -101,6 +107,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    hintText: 'Enter password',
                     prefixIcon: const Icon(Icons.lock, color: Colors.deepOrange),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
