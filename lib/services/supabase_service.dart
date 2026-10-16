@@ -19,7 +19,6 @@ class SupabaseService {
   // Save order to Supabase orders table with items summary
   Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone}) async {
     try {
-      // Build summary of items (e.g. "Special Chicken Biryani (x1), Cold Drink (x2)")
       String itemsSummary = order.items.isNotEmpty
           ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
           : 'QuickBite Food Order';
@@ -61,6 +60,17 @@ class SupabaseService {
     } catch (e) {
       print('Error fetching orders from Supabase: $e');
       return [];
+    }
+  }
+
+  // Update order status in Supabase orders table
+  Future<bool> updateOrderStatus(String orderId, String newStatus) async {
+    try {
+      await _client.from('orders').update({'status': newStatus}).eq('order_id', orderId);
+      return true;
+    } catch (e) {
+      print('Error updating order status in Supabase: $e');
+      return false;
     }
   }
 }
