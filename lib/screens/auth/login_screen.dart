@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../home/main_navigation.dart';
 import 'signup_screen.dart';
+import '../../admin/screens/admin_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -162,6 +163,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 30),
+                  // Admin Portal Link
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.admin_panel_settings, color: Colors.grey, size: 18),
+                    label: const Text('Restaurant Owner? Admin Portal', style: TextStyle(color: Colors.grey, fontSize: 13)),
                   ),
                 ],
               ),
