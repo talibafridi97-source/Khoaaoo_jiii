@@ -16,6 +16,7 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final SupabaseService _supabaseService = SupabaseService();
+  final _supabaseClient = Supabase.instance.client;
   
   List<OrderModel> _orders = [];
   List<FoodModel> _foodItems = [];
@@ -26,6 +27,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadAdminData();
+    _listenToRealtimeOrders();
+  }
+
+  // Supabase Realtime Stream: Listen to new incoming orders instantly like WhatsApp!
+  void _listenToRealtimeOrders() {
+    _supabaseClient
+        .from('orders')
+        .stream(primaryKey: ['order_id'])
+        .listen((data) {
+      if (!mounted) return;
+      
+      final updatedOrders = data.map((json) {
+        return OrderModel(
+          orderId: json['order_id'] ?? '#QB1024',
+          items: [],
+          totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+          deliveryAddress: json['delivery_address'] ?? '',
+          status: json['status'] ?? 'Preparing',
+          timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
+          paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
+          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
+        );
+      }).toList();
+
+      // Check if a new order arrived
+      if (updatedOrders.length > _orders.length) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🔔 NEW ORDER RECEIVED! Check customer orders tab.'),
+            backgroundColor: Colors.deepOrange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+
+      setState(() {
+        _orders = updatedOrders;
+      });
+    });
   }
 
   Future<void> _loadAdminData() async {
@@ -42,7 +82,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
 
   Future<void> _deleteFoodItem(String id) async {
     try {
-      await Supabase.instance.client.from('food_items').delete().eq('id', id);
+      await _supabaseClient.from('food_items').delete().eq('id', id);
       _loadAdminData();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Food item deleted successfully')));
@@ -147,7 +187,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('QuickBite Restaurant Admin Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('QuickBite Restaurant Admin Dashboard (Live)', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
@@ -240,7 +280,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.between,
                         children: [
                           const Text('Restaurant Menu Items', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                           ElevatedButton.icon(
