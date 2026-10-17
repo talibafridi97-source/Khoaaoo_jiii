@@ -44,17 +44,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         orderId: orderId,
         items: _cartProvider.items,
         totalAmount: _cartProvider.totalAmount,
-        deliveryAddress: _addressController.text,
+        deliveryAddress: _addressController.text.trim(),
         status: 'Preparing',
         timestamp: DateTime.now(),
         paymentMethod: selectedPaymentMethod,
       );
 
-      // Save to Supabase orders table with user entered name & phone
-      await _supabaseService.placeOrder(
+      // Save to Supabase orders table with user entered name, phone & delivery notes
+      bool success = await _supabaseService.placeOrder(
         order,
         customerName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
+        deliveryNotes: _notesController.text.trim(),
       );
 
       if (!mounted) return;
@@ -62,6 +63,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() {
         _isPlacingOrder = false;
       });
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to place order. Please check database connection or RLS settings.')),
+        );
+        return;
+      }
 
       showDialog(
         context: context,

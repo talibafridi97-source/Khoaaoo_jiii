@@ -5,7 +5,7 @@ import '../models/order_model.dart';
 class SupabaseService {
   final _client = Supabase.instance.client;
 
-  // Fetch food items from Supabase food_items table with robust null safety
+  // Fetch food items from Supabase food_items table
   Future<List<FoodModel>> fetchFoodItems() async {
     try {
       final response = await _client.from('food_items').select();
@@ -28,23 +28,36 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table with items summary
-  Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone}) async {
+  // Toggle favorite in Supabase
+  Future<void> toggleFavorite(String foodId, bool isFavorite) async {
+    try {
+      await _client.from('food_items').update({'is_favorite': isFavorite}).eq('id', foodId);
+    } catch (e) {
+      print('Error updating favorite in Supabase: $e');
+    }
+  }
+
+  // Save order to Supabase orders table with items summary and delivery notes
+  Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone, String deliveryNotes = ''}) async {
     try {
       String itemsSummary = order.items.isNotEmpty
           ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
           : 'QuickBite Food Order';
+
+      final userEmail = _client.auth.currentUser?.email ?? 'guest@quickbite.pk';
 
       await _client.from('orders').insert({
         'order_id': order.orderId,
         'customer_name': customerName,
         'phone': phone,
         'delivery_address': order.deliveryAddress,
+        'delivery_notes': deliveryNotes,
         'total_amount': order.totalAmount,
         'payment_method': order.paymentMethod,
         'status': order.status,
         'timestamp': order.timestamp.toIso8601String(),
         'items_summary': itemsSummary,
+        'user_email': userEmail,
       });
       return true;
     } catch (e) {
@@ -53,10 +66,18 @@ class SupabaseService {
     }
   }
 
-  // Fetch orders from Supabase orders table with robust null safety
+  // Fetch orders from Supabase orders table (filtered by current user or all if admin)
   Future<List<OrderModel>> fetchOrders() async {
     try {
-      final response = await _client.from('orders').select();
+      final userEmail = _client.auth.currentUser?.email;
+      
+      var query = _client.from('orders').select();
+      
+      if (userEmail != null && userEmail != 'admin@quickbite.pk') {
+        query = _client.from('orders').select().eq('user_email', userEmail);
+      }
+
+      final response = await query;
       return (response as List).map((json) {
         return OrderModel(
           orderId: json['order_id'] ?? '#QB1024',
