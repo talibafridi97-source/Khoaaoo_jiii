@@ -5,11 +5,23 @@ import '../models/order_model.dart';
 class SupabaseService {
   final _client = Supabase.instance.client;
 
-  // Fetch food items from Supabase food_items table
+  // Fetch food items from Supabase food_items table with robust null safety
   Future<List<FoodModel>> fetchFoodItems() async {
     try {
       final response = await _client.from('food_items').select();
-      return (response as List).map((json) => FoodModel.fromJson(json)).toList();
+      return (response as List).map((json) {
+        return FoodModel(
+          id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          name: json['name'] ?? 'QuickBite Food',
+          description: json['description'] ?? '',
+          price: (json['price'] as num?)?.toDouble() ?? 0.0,
+          imageUrl: json['image_url'] ?? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500',
+          rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
+          deliveryTime: (json['delivery_time'] as num?)?.toInt() ?? 25,
+          category: json['category'] ?? 'All',
+          isFavorite: json['is_favorite'] as bool? ?? false,
+        );
+      }).toList();
     } catch (e) {
       print('Error fetching food items from Supabase: $e');
       return [];
@@ -41,7 +53,7 @@ class SupabaseService {
     }
   }
 
-  // Fetch orders from Supabase orders table
+  // Fetch orders from Supabase orders table with robust null safety
   Future<List<OrderModel>> fetchOrders() async {
     try {
       final response = await _client.from('orders').select();
@@ -52,7 +64,9 @@ class SupabaseService {
           totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
           deliveryAddress: json['delivery_address'] ?? '',
           status: json['status'] ?? 'Preparing',
-          timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
+          timestamp: json['timestamp'] != null
+              ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
+              : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
           itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
         );
