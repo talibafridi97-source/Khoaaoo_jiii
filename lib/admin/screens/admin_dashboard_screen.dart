@@ -280,7 +280,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.between,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Restaurant Menu Items', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                           ElevatedButton.icon(
