@@ -82,12 +82,12 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'QuickBite Admin Portal',
+                  'Khoaaoo_jiii Admin Portal',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Login with your Supabase Admin Account',
+                  'Restaurant Owner Dashboard',
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 const SizedBox(height: 30),

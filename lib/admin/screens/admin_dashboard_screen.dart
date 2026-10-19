@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import '../../models/order_model.dart';
 import '../../models/food_model.dart';
 import '../../services/supabase_service.dart';
@@ -30,7 +33,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     _listenToRealtimeOrders();
   }
 
-  // Supabase Realtime Stream: Listen to new incoming orders instantly like WhatsApp!
+  // Play audio notification on web when new order arrives
+  void _playNotificationSound() {
+    if (kIsWeb) {
+      try {
+        final audio = html.AudioElement('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play();
+      } catch (e) {
+        print('Audio error: $e');
+      }
+    }
+  }
+
+  // Supabase Realtime Stream: Listen to new incoming orders instantly like WhatsApp with sound!
   void _listenToRealtimeOrders() {
     _supabaseClient
         .from('orders')
@@ -47,17 +62,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
           status: json['status'] ?? 'Preparing',
           timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
-          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
+          itemsSummary: json['delivery_address'] ?? 'Khoaaoo_jiii Order',
         );
       }).toList();
 
       // Check if a new order arrived
       if (updatedOrders.length > _orders.length) {
+        _playNotificationSound();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🔔 NEW ORDER RECEIVED! Check customer orders tab.'),
             backgroundColor: Colors.deepOrange,
-            duration: Duration(seconds: 5),
+            duration: Duration(seconds: 6),
           ),
         );
       }
@@ -100,7 +116,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Order Details (${order.orderId})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Expanded(child: Text('Order Details (${order.orderId})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18), overflow: TextOverflow.ellipsis)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
@@ -118,7 +134,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               const SizedBox(height: 8),
               const Text('Ordered Items:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 4),
-              Text(order.itemsSummary.isNotEmpty ? order.itemsSummary : 'QuickBite Food Order', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(order.itemsSummary.isNotEmpty ? order.itemsSummary : 'Khoaaoo_jiii Food Order', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const Text('Delivery Address:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 4),
@@ -134,8 +150,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
               const SizedBox(height: 24),
               const Text('Update Order Status / Inform Customer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
@@ -187,7 +205,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('QuickBite Restaurant Admin Dashboard (Live)', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Khoaaoo_jiii Restaurant Admin Dashboard (Live)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
@@ -245,24 +263,41 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text('Order: ${order.orderId}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
+                                        Expanded(
+                                          child: Text(
+                                            'Order: ${order.orderId}',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(8)),
-                                          child: Text(order.status, style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                                          child: Text(order.status, style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    Text('Items: ${order.itemsSummary.isNotEmpty ? order.itemsSummary : "QuickBite Order"}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                                    Text(
+                                      'Items: ${order.itemsSummary.isNotEmpty ? order.itemsSummary : "Khoaaoo_jiii Order"}',
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                     const SizedBox(height: 6),
-                                    Text('Delivery Address: ${order.deliveryAddress}', style: TextStyle(color: Colors.grey.shade700)),
-                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Delivery Address: ${order.deliveryAddress}',
+                                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 8),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text('Total Bill: Rs. ${order.totalAmount.toStringAsFixed(0)} (${order.paymentMethod})', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        const Text('Tap to view details & update status ➔', style: TextStyle(color: Colors.deepOrange, fontSize: 12)),
+                                        const Text('Tap to view details ➔', style: TextStyle(color: Colors.deepOrange, fontSize: 12)),
                                       ],
                                     ),
                                   ],
