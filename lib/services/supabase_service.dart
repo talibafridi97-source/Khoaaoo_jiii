@@ -37,30 +37,36 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table (using exact matching columns: order_id, customer_name, phone, delivery_address, total_amount, payment_method, status, timestamp)
+  // Save order to Supabase orders table with items summary
   Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone, String deliveryNotes = ''}) async {
     try {
-      // Append delivery notes to address if provided
-      String fullAddress = order.deliveryAddress;
-      if (deliveryNotes.isNotEmpty) {
-        fullAddress += ' (Note: $deliveryNotes)';
-      }
+      String itemsSummary = order.items.isNotEmpty
+          ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
+          : 'QuickBite Food Order';
 
       await _client.from('orders').insert({
         'order_id': order.orderId,
         'customer_name': customerName,
         'phone': phone,
-        'delivery_address': fullAddress,
+        'delivery_address': deliveryAddressWithNotes(order.deliveryAddress, deliveryNotes),
         'total_amount': order.totalAmount,
         'payment_method': order.paymentMethod,
         'status': order.status,
         'timestamp': order.timestamp.toIso8601String(),
+        'items_summary': itemsSummary,
       });
       return true;
     } catch (e) {
       print('Error saving order to Supabase: $e');
       return false;
     }
+  }
+
+  String deliveryAddressWithNotes(String address, String notes) {
+    if (notes.isNotEmpty) {
+      return '$address (Note: $notes)';
+    }
+    return address;
   }
 
   // Fetch orders from Supabase orders table
@@ -78,7 +84,7 @@ class SupabaseService {
               ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
               : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
-          itemsSummary: json['delivery_address'] ?? 'QuickBite Order',
+          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
         );
       }).toList();
     } catch (e) {
