@@ -4,7 +4,7 @@ import 'package:khoaaoo_jiiii/main.dart';
 
 void main() {
   testWidgets('QuickBite App test', (WidgetTester tester) async {
-    await tester.pumpWidget(const QuickBiteApp());
+    await tester.pumpWidget(const QuickBiteApp(isLoggedIn: false));
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }
