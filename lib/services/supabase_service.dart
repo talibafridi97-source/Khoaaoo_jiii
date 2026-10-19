@@ -42,7 +42,7 @@ class SupabaseService {
     try {
       String itemsSummary = order.items.isNotEmpty
           ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
-          : 'QuickBite Food Order';
+          : 'Khoaaoo_jiii Food Order';
 
       await _client.from('orders').insert({
         'order_id': order.orderId,
@@ -84,7 +84,7 @@ class SupabaseService {
               ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
               : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
-          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
+          itemsSummary: json['items_summary'] ?? 'Delicious Khoaaoo_jiii Meal',
         );
       }).toList();
     } catch (e) {
@@ -100,6 +100,17 @@ class SupabaseService {
       return true;
     } catch (e) {
       print('Error updating order status in Supabase: $e');
+      return false;
+    }
+  }
+
+  // Delete order from Supabase orders table
+  Future<bool> deleteOrder(String orderId) async {
+    try {
+      await _client.from('orders').delete().eq('order_id', orderId);
+      return true;
+    } catch (e) {
+      print('Error deleting order from Supabase: $e');
       return false;
     }
   }

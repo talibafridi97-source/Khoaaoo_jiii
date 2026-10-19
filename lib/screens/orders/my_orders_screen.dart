@@ -35,6 +35,35 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     });
   }
 
+  void _confirmDeleteOrder(String orderId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Order'),
+        content: Text('Are you sure you want to delete order $orderId?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _supabaseService.deleteOrder(orderId);
+              _loadOrders();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Order $orderId deleted successfully')),
+              );
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentOrders = _orders.where((o) => o.status != 'Delivered' && o.status != 'Cancelled').toList();
@@ -126,20 +155,30 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: order.status == 'Delivered' ? Colors.green.shade100 : Colors.orange.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  order.status,
-                  style: TextStyle(
-                    color: order.status == 'Delivered' ? Colors.green.shade700 : Colors.deepOrange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: order.status == 'Delivered' ? Colors.green.shade100 : Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      order.status,
+                      style: TextStyle(
+                        color: order.status == 'Delivered' ? Colors.green.shade700 : Colors.deepOrange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    onPressed: () => _confirmDeleteOrder(order.orderId),
+                    tooltip: 'Delete Order',
+                  ),
+                ],
               ),
             ],
           ),
