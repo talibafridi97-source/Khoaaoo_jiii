@@ -100,9 +100,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   Widget _buildOrderCard(BuildContext context, OrderModel order, {required bool canTrack}) {
     String itemsText = order.itemsSummary.isNotEmpty
         ? order.itemsSummary
-        : (order.items.isNotEmpty
-            ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
-            : 'Delicious QuickBite Meal');
+        : 'Delicious Khoaaoo_jiii Meal';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -120,7 +118,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(order.orderId, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Expanded(
+                child: Text(
+                  itemsText,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -138,11 +143,22 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(itemsText, style: TextStyle(color: Colors.grey.shade700, fontSize: 14)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text('Order ID: ${order.orderId}', style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              Text('•', style: TextStyle(color: Colors.grey.shade400)),
+              const SizedBox(width: 8),
+              Text(
+                '${order.timestamp.day}/${order.timestamp.month}/${order.timestamp.year}',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
           Text(
-            '${order.timestamp.day}/${order.timestamp.month}/${order.timestamp.year} - ${order.paymentMethod}',
+            'Payment: ${order.paymentMethod}',
             style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
           ),
           const Divider(height: 20),
