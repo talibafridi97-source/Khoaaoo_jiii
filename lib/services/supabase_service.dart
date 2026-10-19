@@ -37,27 +37,24 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table with items summary and delivery notes
+  // Save order to Supabase orders table (using exact matching columns: order_id, customer_name, phone, delivery_address, total_amount, payment_method, status, timestamp)
   Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone, String deliveryNotes = ''}) async {
     try {
-      String itemsSummary = order.items.isNotEmpty
-          ? order.items.map((i) => '${i.foodItem.name} (x${i.quantity})').join(', ')
-          : 'QuickBite Food Order';
-
-      final userEmail = _client.auth.currentUser?.email ?? 'guest@quickbite.pk';
+      // Append delivery notes to address if provided
+      String fullAddress = order.deliveryAddress;
+      if (deliveryNotes.isNotEmpty) {
+        fullAddress += ' (Note: $deliveryNotes)';
+      }
 
       await _client.from('orders').insert({
         'order_id': order.orderId,
         'customer_name': customerName,
         'phone': phone,
-        'delivery_address': order.deliveryAddress,
-        'delivery_notes': deliveryNotes,
+        'delivery_address': fullAddress,
         'total_amount': order.totalAmount,
         'payment_method': order.paymentMethod,
         'status': order.status,
         'timestamp': order.timestamp.toIso8601String(),
-        'items_summary': itemsSummary,
-        'user_email': userEmail,
       });
       return true;
     } catch (e) {
@@ -66,18 +63,10 @@ class SupabaseService {
     }
   }
 
-  // Fetch orders from Supabase orders table (filtered by current user or all if admin)
+  // Fetch orders from Supabase orders table
   Future<List<OrderModel>> fetchOrders() async {
     try {
-      final userEmail = _client.auth.currentUser?.email;
-      
-      var query = _client.from('orders').select();
-      
-      if (userEmail != null && userEmail != 'admin@quickbite.pk') {
-        query = _client.from('orders').select().eq('user_email', userEmail);
-      }
-
-      final response = await query;
+      final response = await _client.from('orders').select();
       return (response as List).map((json) {
         return OrderModel(
           orderId: json['order_id'] ?? '#QB1024',
@@ -89,7 +78,7 @@ class SupabaseService {
               ? (DateTime.tryParse(json['timestamp'].toString()) ?? DateTime.now())
               : DateTime.now(),
           paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
-          itemsSummary: json['items_summary'] ?? 'Delicious QuickBite Meal',
+          itemsSummary: json['delivery_address'] ?? 'QuickBite Order',
         );
       }).toList();
     } catch (e) {
