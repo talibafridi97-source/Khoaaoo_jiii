@@ -9,6 +9,8 @@ class OrderModel {
   final DateTime timestamp;
   final String paymentMethod; // 'Cash on Delivery', 'Credit Card'
   final String itemsSummary;
+  final String customerName;
+  final String phone;
 
   OrderModel({
     required this.orderId,
@@ -19,6 +21,8 @@ class OrderModel {
     required this.timestamp,
     this.paymentMethod = 'Cash on Delivery',
     this.itemsSummary = '',
+    this.customerName = '',
+    this.phone = '',
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +41,8 @@ class OrderModel {
           : DateTime.now(),
       paymentMethod: json['paymentMethod'] ?? json['payment_method'] ?? 'Cash on Delivery',
       itemsSummary: json['items_summary'] ?? '',
+      customerName: json['customer_name'] ?? '',
+      phone: json['phone'] ?? '',
     );
   }
 
@@ -50,6 +56,8 @@ class OrderModel {
       'timestamp': timestamp.toIso8601String(),
       'paymentMethod': paymentMethod,
       'items_summary': itemsSummary,
+      'customer_name': customerName,
+      'phone': phone,
     };
   }
 }
