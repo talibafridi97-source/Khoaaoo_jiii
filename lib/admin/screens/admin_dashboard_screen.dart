@@ -86,12 +86,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     });
   }
 
+  void _confirmDeleteFoodItem(String id, String name) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Food Item'),
+        content: Text('Are you sure you want to delete "$name" from the menu? It will be removed from the customer app immediately.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteFoodItem(id);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _deleteFoodItem(String id) async {
     try {
       await _supabaseClient.from('food_items').delete().eq('id', id);
       _loadAdminData();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Food item deleted successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Food item deleted successfully & removed from customer app')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
@@ -350,7 +374,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                                       subtitle: Text('${food.category} • Rs. ${food.price.toStringAsFixed(0)} • ${food.deliveryTime} mins'),
                                       trailing: IconButton(
                                         icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => _deleteFoodItem(food.id),
+                                        onPressed: () => _confirmDeleteFoodItem(food.id, food.name),
                                       ),
                                     ),
                                   );
