@@ -86,12 +86,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     });
   }
 
-  void _confirmDeleteFoodItem(String id, String name) {
+  void _confirmDeleteFoodItem(String name) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Food Item'),
-        content: Text('Are you sure you want to delete "$name" from the menu? It will be removed from the customer app immediately.'),
+        content: Text('Are you sure you want to delete "$name" from the menu?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -101,7 +101,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () {
               Navigator.pop(context);
-              _deleteFoodItem(id);
+              _deleteFoodItem(name);
             },
             child: const Text('Delete'),
           ),
@@ -110,12 +110,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     );
   }
 
-  Future<void> _deleteFoodItem(String id) async {
+  Future<void> _deleteFoodItem(String name) async {
     try {
-      await _supabaseClient.from('food_items').delete().eq('id', id);
+      // Delete by unique item name to avoid primary key naming mismatches in Supabase
+      await _supabaseClient.from('food_items').delete().eq('name', name);
       _loadAdminData();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Food item deleted successfully & removed from customer app')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Food item deleted successfully')));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting item: $e')));
@@ -374,7 +375,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                                       subtitle: Text('${food.category} • Rs. ${food.price.toStringAsFixed(0)} • ${food.deliveryTime} mins'),
                                       trailing: IconButton(
                                         icon: const Icon(Icons.delete, color: Colors.red),
-                                        onPressed: () => _confirmDeleteFoodItem(food.id, food.name),
+                                        onPressed: () => _confirmDeleteFoodItem(food.name),
                                       ),
                                     ),
                                   );
