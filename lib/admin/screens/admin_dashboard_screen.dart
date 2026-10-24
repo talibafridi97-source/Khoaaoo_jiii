@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 import '../../models/order_model.dart';
 import '../../models/food_model.dart';
 import '../../services/supabase_service.dart';
@@ -31,8 +34,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     _listenToRealtimeOrders();
   }
 
+  // Play audible notification sound on web or haptic vibration on mobile
   void _playNotificationSound() {
-    HapticFeedback.heavyImpact();
+    if (kIsWeb) {
+      try {
+        final html.AudioElement audio = html.AudioElement('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.volume = 1.0;
+        audio.play().catchError((e) {
+          print('Browser autoplay restriction: $e');
+        });
+      } catch (e) {
+        print('Audio error: $e');
+      }
+    } else {
+      HapticFeedback.heavyImpact();
+    }
   }
 
   void _listenToRealtimeOrders() {
@@ -61,7 +77,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         _playNotificationSound();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('🔔 NEW ORDER RECEIVED! Check customer orders tab.'),
+            content: Text('🔔 NEW ORDER RECEIVED! Sound played. Check customer orders tab.'),
             backgroundColor: Colors.deepOrange,
             duration: Duration(seconds: 6),
           ),
@@ -112,7 +128,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
 
   Future<void> _deleteFoodItem(String name) async {
     try {
-      // Delete by unique item name to avoid primary key naming mismatches in Supabase
       await _supabaseClient.from('food_items').delete().eq('name', name);
       _loadAdminData();
       if (!mounted) return;
@@ -141,74 +156,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         ),
         content: SizedBox(
           width: 450,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Divider(),
-              const SizedBox(height: 8),
-              Text('Order ID: ${order.orderId}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 12),
-              const Text('Customer Phone Number:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text(order.phone, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
-              const SizedBox(height: 16),
-              const Text('Ordered Items:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text(order.itemsSummary.isNotEmpty ? order.itemsSummary : 'Khoaaoo_jiii Food Order', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange)),
-              const SizedBox(height: 16),
-              const Text('Delivery Address:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text(order.deliveryAddress, style: const TextStyle(fontSize: 15)),
-              const SizedBox(height: 16),
-              const Text('Payment & Total:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text('Rs. ${order.totalAmount.toStringAsFixed(0)} (${order.paymentMethod})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const Text('Order Time:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-              const SizedBox(height: 4),
-              Text(order.timestamp.toString(), style: const TextStyle(fontSize: 14)),
-              const SizedBox(height: 24),
-              const Text('Update Order Status / Inform Customer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                    onPressed: () async {
-                      await _supabaseService.updateOrderStatus(order.orderId, 'Preparing');
-                      Navigator.pop(context);
-                      _loadAdminData();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated to Preparing')));
-                    },
-                    child: const Text('Preparing'),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-                    onPressed: () async {
-                      await _supabaseService.updateOrderStatus(order.orderId, 'Out for Delivery (10-15 mins)');
-                      Navigator.pop(context);
-                      _loadAdminData();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated: Out for Delivery')));
-                    },
-                    child: const Text('Out for Delivery'),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                    onPressed: () async {
-                      await _supabaseService.updateOrderStatus(order.orderId, 'Delivered');
-                      Navigator.pop(context);
-                      _loadAdminData();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated to Delivered')));
-                    },
-                    child: const Text('Delivered'),
-                  ),
-                ],
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(),
+                const SizedBox(height: 8),
+                Text('Order ID: ${order.orderId}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 12),
+                const Text('Customer Phone Number:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(order.phone, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 16),
+                const Text('Ordered Items:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(order.itemsSummary.isNotEmpty ? order.itemsSummary : 'Khoaaoo_jiii Food Order', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+                const SizedBox(height: 16),
+                const Text('Delivery Address:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(order.deliveryAddress, style: const TextStyle(fontSize: 15)),
+                const SizedBox(height: 16),
+                const Text('Payment & Total:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text('Rs. ${order.totalAmount.toStringAsFixed(0)} (${order.paymentMethod})', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                const Text('Order Time:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Text(order.timestamp.toString(), style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 24),
+                const Text('Update Order Status / Inform Customer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                      onPressed: () async {
+                        await _supabaseService.updateOrderStatus(order.orderId, 'Preparing');
+                        Navigator.pop(context);
+                        _loadAdminData();
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated to Preparing')));
+                      },
+                      child: const Text('Preparing'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                      onPressed: () async {
+                        await _supabaseService.updateOrderStatus(order.orderId, 'Out for Delivery (10-15 mins)');
+                        Navigator.pop(context);
+                        _loadAdminData();
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated: Out for Delivery')));
+                      },
+                      child: const Text('Out for Delivery'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                      onPressed: () async {
+                        await _supabaseService.updateOrderStatus(order.orderId, 'Delivered');
+                        Navigator.pop(context);
+                        _loadAdminData();
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Status updated to Delivered')));
+                      },
+                      child: const Text('Delivered'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
