@@ -86,7 +86,7 @@ class OrderTrackingScreen extends StatelessWidget {
                   ),
                   const Divider(height: 24),
                   const Row(
-                    mainAxisAlignment: MainAxisAlignment.between,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Live Status Sync', style: TextStyle(color: Colors.grey)),
                       Text('Connected with Supabase', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green)),
