@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
+  final String currentStatus;
 
-  const OrderTrackingScreen({Key? key, this.orderId = '#QB1024'}) : super(key: key);
+  const OrderTrackingScreen({Key? key, this.orderId = '#QB1024', this.currentStatus = 'Preparing'}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    bool isPreparing = true;
+    bool isConfirmed = true;
+    bool isOutForDelivery = currentStatus.toLowerCase().contains('out for delivery') || currentStatus.toLowerCase().contains('delivered');
+    bool isDelivered = currentStatus.toLowerCase().contains('delivered');
+
     final steps = [
       {'title': 'Order Placed', 'subtitle': 'We have received your order.', 'isCompleted': true},
-      {'title': 'Order Confirmed', 'subtitle': 'Restaurant has accepted your order.', 'isCompleted': true},
-      {'title': 'Preparing Food', 'subtitle': 'Your delicious food is being freshly prepared.', 'isCompleted': true},
-      {'title': 'Out for Delivery', 'subtitle': 'Rider is on the way to your delivery address.', 'isCompleted': false},
-      {'title': 'Delivered', 'subtitle': 'Enjoy your meal!', 'isCompleted': false},
+      {'title': 'Order Confirmed', 'subtitle': 'Restaurant has accepted your order.', 'isCompleted': isConfirmed},
+      {'title': 'Preparing Food', 'subtitle': 'Your delicious food is being freshly prepared.', 'isCompleted': isPreparing},
+      {'title': 'Out for Delivery', 'subtitle': 'Rider is on the way to your delivery address.', 'isCompleted': isOutForDelivery},
+      {'title': 'Delivered', 'subtitle': 'Enjoy your meal!', 'isCompleted': isDelivered},
     ];
 
     return Scaffold(
@@ -48,10 +54,17 @@ class OrderTrackingScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
+                          color: isDelivered ? Colors.green.shade100 : Colors.orange.shade100,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text('Preparing', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Text(
+                          currentStatus,
+                          style: TextStyle(
+                            color: isDelivered ? Colors.green.shade700 : Colors.deepOrange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -68,15 +81,15 @@ class OrderTrackingScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
                       SizedBox(width: 6),
-                      Text('Delivery Address: House 42, Main Bazaar, Kohat', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      Text('Delivery Address: Kohat City', style: TextStyle(color: Colors.grey, fontSize: 13)),
                     ],
                   ),
                   const Divider(height: 24),
                   const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.between,
                     children: [
-                      Text('Total Amount (Cash on Delivery)', style: TextStyle(color: Colors.grey)),
-                      Text('Rs. 1,049', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.deepOrange)),
+                      Text('Live Status Sync', style: TextStyle(color: Colors.grey)),
+                      Text('Connected with Supabase', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green)),
                     ],
                   ),
                 ],
@@ -84,7 +97,7 @@ class OrderTrackingScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Order Timeline',
+              'Order Timeline (Live Updates)',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),

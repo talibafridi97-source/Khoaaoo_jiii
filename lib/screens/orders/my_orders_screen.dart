@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/order_model.dart';
 import '../../services/supabase_service.dart';
 import 'order_tracking_screen.dart';
@@ -12,6 +13,7 @@ class MyOrdersScreen extends StatefulWidget {
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   final SupabaseService _supabaseService = SupabaseService();
+  final _supabaseClient = Supabase.instance.client;
   List<OrderModel> _orders = [];
   bool _isLoading = true;
 
@@ -19,6 +21,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   void initState() {
     super.initState();
     _loadOrders();
+    _listenToCustomerOrders();
   }
 
   Future<void> _loadOrders() async {
@@ -32,6 +35,36 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     setState(() {
       _orders = orders;
       _isLoading = false;
+    });
+  }
+
+  // Supabase Realtime Stream: Customer sees order status updates live when admin changes it!
+  void _listenToCustomerOrders() {
+    _supabaseClient
+        .from('orders')
+        .stream(primaryKey: ['order_id'])
+        .listen((data) {
+      if (!mounted) return;
+
+      final updatedOrders = data.map((json) {
+        return OrderModel(
+          orderId: json['order_id'] ?? '#QB1024',
+          items: [],
+          totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
+          deliveryAddress: json['delivery_address'] ?? '',
+          status: json['status'] ?? 'Preparing',
+          timestamp: json['timestamp'] != null ? DateTime.parse(json['timestamp']) : DateTime.now(),
+          paymentMethod: json['payment_method'] ?? 'Cash on Delivery',
+          itemsSummary: json['items_summary'] ?? 'Delicious Khoaaoo_jiii Meal',
+          customerName: json['customer_name'] ?? '',
+          phone: json['phone'] ?? '',
+        );
+      }).toList();
+
+      setState(() {
+        _orders = updatedOrders;
+        _isLoading = false;
+      });
     });
   }
 
@@ -217,7 +250,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => OrderTrackingScreen(orderId: order.orderId)),
+                          MaterialPageRoute(builder: (context) => OrderTrackingScreen(orderId: order.orderId, currentStatus: order.status)),
                         );
                       },
                       child: const Text('Track', style: TextStyle(color: Colors.deepOrange, fontSize: 13)),
