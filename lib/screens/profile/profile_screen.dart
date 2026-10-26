@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/theme_service.dart';
 import '../auth/login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -11,6 +12,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
+  final ThemeService _themeService = ThemeService();
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +71,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Dark Mode Toggle Card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 6),
+                ],
+              ),
+              child: SwitchListTile(
+                secondary: const Icon(Icons.dark_mode, color: Colors.deepOrange),
+                title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                subtitle: const Text('Switch between Light and Dark theme', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                value: _themeService.isDarkMode,
+                activeColor: Colors.deepOrange,
+                onChanged: (val) {
+                  setState(() {
+                    _themeService.toggleTheme(val);
+                  });
+                },
               ),
             ),
             const SizedBox(height: 20),
@@ -160,8 +187,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                onPressed: () {
-                  _authService.logout();
+                onPressed: () async {
+                  await _authService.logout();
+                  if (!context.mounted) return;
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginScreen()),

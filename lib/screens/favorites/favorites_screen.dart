@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../data/food_data.dart';
 import '../../models/food_model.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/supabase_service.dart';
 import '../food_details/food_details_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -13,10 +13,29 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   final CartProvider _cartProvider = CartProvider();
+  final SupabaseService _supabaseService = SupabaseService();
+  List<FoodModel> _foodList = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    setState(() => _isLoading = true);
+    final items = await _supabaseService.fetchFoodItems();
+    if (!mounted) return;
+    setState(() {
+      _foodList = items;
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<FoodModel> favoriteItems = FoodData.foodItems.where((food) => food.isFavorite).toList();
+    List<FoodModel> favoriteItems = _foodList.where((food) => food.isFavorite).toList();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -25,102 +44,104 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.deepOrange),
+            onPressed: _loadFavorites,
+          ),
+        ],
       ),
-      body: favoriteItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.favorite_border, size: 80, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No favorite items yet',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('Mark food items as favorite to see them here!', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: favoriteItems.length,
-              itemBuilder: (context, index) {
-                final food = favoriteItems[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 3)),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.deepOrange))
+          : favoriteItems.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.favorite_border, size: 80, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No favorite items yet',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text('Mark food items as favorite to see them here!', style: TextStyle(color: Colors.grey)),
                     ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        food.imageUrl,
-                        width: 70,
-                        height: 70,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          width: 70,
-                          height: 70,
-                          color: Colors.grey.shade200,
-                          child: const Icon(Icons.fastfood, color: Colors.grey),
-                        ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: favoriteItems.length,
+                  itemBuilder: (context, index) {
+                    final food = favoriteItems[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 3)),
+                        ],
                       ),
-                    ),
-                    title: Text(food.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text('Rs. ${food.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Row(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            food.imageUrl,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 70,
+                              height: 70,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.fastfood, color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                        title: Text(food.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.star, size: 14, color: Colors.amber),
-                            const SizedBox(width: 4),
-                            Text('${food.rating}', style: const TextStyle(fontSize: 12)),
-                            const SizedBox(width: 12),
-                            const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Text('${food.deliveryTime} mins', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            const SizedBox(height: 4),
+                            Text('Rs. ${food.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.star, size: 14, color: Colors.amber),
+                                const SizedBox(width: 4),
+                                Text('${food.rating}', style: const TextStyle(fontSize: 12)),
+                                const SizedBox(width: 12),
+                                const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text('${food.deliveryTime} mins', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              int originalIndex = FoodData.foodItems.indexWhere((item) => item.id == food.id);
-                              if (originalIndex != -1) {
-                                FoodData.foodItems[originalIndex] = FoodData.foodItems[originalIndex].copyWith(
-                                  isFavorite: false,
-                                );
-                              }
-                            });
-                          },
-                          child: const Icon(Icons.favorite, color: Colors.red),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                await _supabaseService.toggleFavorite(food.id, false);
+                                _loadFavorites();
+                              },
+                              child: const Icon(Icons.favorite, color: Colors.red),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => FoodDetailsScreen(food: food)),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => FoodDetailsScreen(food: food)),
+                          ).then((_) => _loadFavorites());
+                        },
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
