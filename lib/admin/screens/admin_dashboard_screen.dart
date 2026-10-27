@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import '../utils/audio_helper.dart' if (dart.library.html) '../utils/audio_helper_web.dart';
 import '../../models/order_model.dart';
 import '../../models/food_model.dart';
 import '../../services/supabase_service.dart';
@@ -34,15 +33,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     _listenToRealtimeOrders();
   }
 
-  // Play audible notification sound on web or haptic vibration on mobile
+  // Play cross-platform notification sound (Web audio + Mobile haptic feedback)
   void _playNotificationSound() {
     if (kIsWeb) {
       try {
-        final html.AudioElement audio = html.AudioElement('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        audio.volume = 1.0;
-        audio.play().catchError((e) {
-          print('Browser autoplay restriction: $e');
-        });
+        playAudioAlert();
       } catch (e) {
         print('Audio error: $e');
       }
