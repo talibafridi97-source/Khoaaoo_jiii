@@ -126,14 +126,21 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Rs. ${cartItem.foodItem.price.toStringAsFixed(0)}',
+                                    'Rs. ${cartItem.adjustedPrice.toStringAsFixed(0)} (${cartItem.selectedSize})',
                                     style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold),
                                   ),
-                                  if (cartItem.instructions.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
+                                  if (cartItem.selectedAddons.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
                                     Text(
-                                      'Note: ${cartItem.instructions}',
-                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                      'Add-ons: ${cartItem.selectedAddons.join(", ")}',
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                                    ),
+                                  ],
+                                  if (cartItem.cookingInstructions.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Note: ${cartItem.cookingInstructions}',
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                                     ),
                                   ],
                                 ],
@@ -143,14 +150,14 @@ class _CartScreenState extends State<CartScreen> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 GestureDetector(
-                                  onTap: () => _cartProvider.removeItem(cartItem.id),
+                                  onTap: () => _cartProvider.removeItem(cartItem),
                                   child: const Icon(Icons.close, size: 18, color: Colors.grey),
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
                                   children: [
                                     GestureDetector(
-                                      onTap: () => _cartProvider.updateQuantity(cartItem.id, -1),
+                                      onTap: () => _cartProvider.updateQuantity(cartItem, -1),
                                       child: Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
@@ -168,7 +175,7 @@ class _CartScreenState extends State<CartScreen> {
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap: () => _cartProvider.updateQuantity(cartItem.id, 1),
+                                      onTap: () => _cartProvider.updateQuantity(cartItem, 1),
                                       child: Container(
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
@@ -208,7 +215,7 @@ class _CartScreenState extends State<CartScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Subtotal', style: TextStyle(color: Colors.grey)),
-                          Text('Rs. ${_cartProvider.subtotal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Rs. ${_cartProvider.subtotalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                         ],
                       ),
                       const SizedBox(height: 8),

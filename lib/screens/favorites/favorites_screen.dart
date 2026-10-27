@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/food_model.dart';
-import '../../providers/cart_provider.dart';
 import '../../services/supabase_service.dart';
 import '../food_details/food_details_screen.dart';
 
@@ -12,7 +11,6 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  final CartProvider _cartProvider = CartProvider();
   final SupabaseService _supabaseService = SupabaseService();
   List<FoodModel> _foodList = [];
   bool _isLoading = true;
