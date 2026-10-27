@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/theme_service.dart';
 import '../auth/login_screen.dart';
+import '../orders/my_orders_screen.dart';
+import '../favorites/favorites_screen.dart';
+import 'payment_methods_screen.dart';
+import 'settings_screen.dart';
+import 'help_support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -90,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 subtitle: const Text('Switch between Light and Dark theme', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 value: _themeService.isDarkMode,
-                activeColor: Colors.deepOrange,
+                activeThumbColor: Colors.deepOrange,
                 onChanged: (val) {
                   setState(() {
                     _themeService.toggleTheme(val);
@@ -125,7 +130,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address edit feature')));
+                    },
                     child: const Text('Edit', style: TextStyle(color: Colors.deepOrange)),
                   ),
                 ],
@@ -147,31 +154,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildProfileOption(
                     icon: Icons.receipt_long_outlined,
                     title: 'My Orders',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const MyOrdersScreen()));
+                    },
                   ),
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.favorite_border,
                     title: 'Favorite Items',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoritesScreen()));
+                    },
                   ),
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.payment_outlined,
                     title: 'Payment Methods',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()));
+                    },
                   ),
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.settings_outlined,
                     title: 'Settings & Notifications',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                    },
                   ),
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.help_outline,
                     title: 'Help & Support',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()));
+                    },
                   ),
                 ],
               ),
