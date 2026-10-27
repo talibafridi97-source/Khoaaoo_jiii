@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/food_model.dart';
 import '../../providers/cart_provider.dart';
-import '../cart/cart_screen.dart';
 
 class FoodDetailsScreen extends StatefulWidget {
   final FoodModel food;
-
   const FoodDetailsScreen({Key? key, required this.food}) : super(key: key);
 
   @override
@@ -13,20 +11,26 @@ class FoodDetailsScreen extends StatefulWidget {
 }
 
 class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
-  int quantity = 1;
-  bool isFavorite = false;
-  final TextEditingController _instructionsController = TextEditingController();
+  String selectedSize = 'Regular';
+  final List<String> selectedAddons = [];
+  final TextEditingController _notesController = TextEditingController();
   final CartProvider _cartProvider = CartProvider();
 
-  @override
-  void initState() {
-    super.initState();
-    isFavorite = widget.food.isFavorite;
+  double get calculatedPrice {
+    double base = widget.food.price;
+    if (selectedSize == 'Medium') base += 150;
+    if (selectedSize == 'Large') base += 300;
+    for (var addon in selectedAddons) {
+      if (addon == 'Extra Cheese') base += 60;
+      if (addon == 'Extra Sauce') base += 30;
+      if (addon == 'Extra Patty') base += 180;
+    }
+    return base;
   }
 
   @override
   void dispose() {
-    _instructionsController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -34,274 +38,173 @@ class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Scrollable Content
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Image with Back and Favorite buttons
-                Stack(
-                  children: [
-                    Image.network(
-                      widget.food.imageUrl,
-                      height: 320,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 320,
-                        color: Colors.grey.shade200,
-                        child: const Center(child: Icon(Icons.fastfood, size: 80, color: Colors.grey)),
-                      ),
-                    ),
-                    SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            ),
-                            CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: IconButton(
-                                icon: Icon(
-                                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                                  color: isFavorite ? Colors.red : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    isFavorite = !isFavorite;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: Colors.deepOrange,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Image.network(
+                widget.food.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.fastfood, size: 80, color: Colors.grey),
                 ),
-                // Details Section
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.food.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            'Rs. ${widget.food.price.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepOrange,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.food.rating}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            '(120+ reviews)',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                          const Spacer(),
-                          const Icon(Icons.access_time, color: Colors.grey, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.food.deliveryTime} mins',
-                            style: const TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Description',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.food.description,
-                        style: TextStyle(fontSize: 15, color: Colors.grey.shade700, height: 1.5),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Quantity Selector & Price Modifier
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Quantity',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove),
-                                  onPressed: () {
-                                    if (quantity > 1) {
-                                      setState(() {
-                                        quantity--;
-                                      });
-                                    }
-                                  },
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  child: Text(
-                                    '$quantity',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () {
-                                    setState(() {
-                                      quantity++;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Special Instructions
-                      const Text(
-                        'Special Instructions',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _instructionsController,
-                        decoration: InputDecoration(
-                          hintText: 'e.g. Add extra raita, less spicy, etc.',
-                          hintStyle: TextStyle(color: Colors.grey.shade400),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.deepOrange),
-                          ),
+                      Expanded(
+                        child: Text(
+                          widget.food.name,
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                         ),
-                        maxLines: 2,
+                      ),
+                      Text(
+                        'Rs. ${calculatedPrice.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.deepOrange),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text('${widget.food.rating}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.access_time, color: Colors.grey, size: 18),
+                      const SizedBox(width: 4),
+                      Text('${widget.food.deliveryTime} mins', style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.food.description,
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 14, height: 1.4),
+                  ),
+                  const SizedBox(height: 24),
 
-          // Bottom Action Bar
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
+                  // Portion / Size Selection
+                  const Text('Select Portion / Size', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: ['Regular', 'Medium', 'Large'].map((size) {
+                      bool isSelected = selectedSize == size;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => selectedSize = size),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.deepOrange : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isSelected ? Colors.deepOrange : Colors.grey.shade300),
+                            ),
+                            child: Center(
+                              child: Text(
+                                size,
+                                style: TextStyle(
+                                  color: isSelected ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        side: const BorderSide(color: Colors.deepOrange),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () {
-                        _cartProvider.addItem(
-                          widget.food,
-                          quantity: quantity,
-                          instructions: _instructionsController.text,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added $quantity x ${widget.food.name} to cart!')),
-                        );
+                  const SizedBox(height: 24),
+
+                  // Add-ons & Toppings
+                  const Text('Add-ons & Toppings 🧀', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...['Extra Cheese (+Rs. 60)', 'Extra Sauce (+Rs. 30)', 'Extra Patty (+Rs. 180)'].map((addonName) {
+                    String cleanName = addonName.split(' (').first;
+                    bool isChecked = selectedAddons.contains(cleanName);
+                    return CheckboxListTile(
+                      title: Text(addonName),
+                      value: isChecked,
+                      activeColor: Colors.deepOrange,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            selectedAddons.add(cleanName);
+                          } else {
+                            selectedAddons.remove(cleanName);
+                          }
+                        });
                       },
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
+                    );
+                  }),
+                  const SizedBox(height: 16),
+
+                  // Special Cooking Instructions
+                  const Text('Special Cooking Instructions 📝', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _notesController,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Kam mirch rakhna, Pyaz na daalna...',
+                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.all(14),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () {
-                        _cartProvider.addItem(
-                          widget.food,
-                          quantity: quantity,
-                          instructions: _instructionsController.text,
-                        );
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const CartScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Buy Now',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
           ),
         ],
+      ),
+      bottomSheet: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            onPressed: () {
+              _cartProvider.addItem(
+                widget.food,
+                size: selectedSize,
+                addons: List.from(selectedAddons),
+                notes: _notesController.text.trim(),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Added ${widget.food.name} ($selectedSize) to cart!')),
+              );
+              Navigator.pop(context);
+            },
+            child: Text(
+              'Add to Cart • Rs. ${calculatedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
       ),
     );
   }

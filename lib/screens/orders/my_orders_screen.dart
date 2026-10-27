@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/order_model.dart';
 import '../../services/supabase_service.dart';
+import '../../providers/cart_provider.dart';
+import '../cart/cart_screen.dart';
 import 'order_tracking_screen.dart';
 
 class MyOrdersScreen extends StatefulWidget {
@@ -14,6 +16,7 @@ class MyOrdersScreen extends StatefulWidget {
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   final _supabaseClient = Supabase.instance.client;
+  final CartProvider _cartProvider = CartProvider();
   List<OrderModel> _orders = [];
   bool _isLoading = true;
 
@@ -38,7 +41,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     });
   }
 
-  // Supabase Realtime Stream: Customer sees order status updates live when admin changes it!
   void _listenToCustomerOrders() {
     _supabaseClient
         .from('orders')
@@ -97,6 +99,40 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     );
   }
 
+  // One-Click Re-order Dialog & Action
+  void _handleReorder(OrderModel order) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Repeat Order 🔄'),
+        content: Text('Do you want to add items from order ${order.orderId} (${order.itemsSummary}) to your cart?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(context);
+              // Populate cart
+              _cartProvider.clearCart();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Items added to cart for reorder! 🛒')),
+              );
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+            child: const Text('Add to Cart'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentOrders = _orders.where((o) => o.status != 'Delivered' && o.status != 'Cancelled').toList();
@@ -131,7 +167,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             ? const Center(child: CircularProgressIndicator(color: Colors.deepOrange))
             : TabBarView(
                 children: [
-                  // Current Orders
                   currentOrders.isEmpty
                       ? const Center(child: Text('No active current orders', style: TextStyle(color: Colors.grey)))
                       : ListView.builder(
@@ -142,7 +177,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                             return _buildOrderCard(context, order, canTrack: true);
                           },
                         ),
-                  // Previous Orders
                   previousOrders.isEmpty
                       ? const Center(child: Text('No previous order history', style: TextStyle(color: Colors.grey)))
                       : ListView.builder(
@@ -262,11 +296,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Items added to cart for reorder!')),
-                      );
-                    },
+                    onPressed: () => _handleReorder(order),
                     child: const Text('Reorder', style: TextStyle(color: Colors.white, fontSize: 13)),
                   ),
                 ],

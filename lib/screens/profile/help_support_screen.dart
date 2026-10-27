@@ -32,7 +32,7 @@ class HelpSupportScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Contact Us', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('Contact Us & Live Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -48,11 +48,11 @@ class HelpSupportScreen extends StatelessWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.chat, color: Colors.deepOrange),
-                  title: const Text('Live WhatsApp Support', style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Chat with our support manager'),
+                  leading: const Icon(Icons.chat, color: Colors.green),
+                  title: const Text('WhatsApp Live Support 💬', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Connect instantly with restaurant manager'),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp chat...')));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp chat support (+92 300 1234567)...'), backgroundColor: Colors.green));
                   },
                 ),
                 const Divider(height: 1),

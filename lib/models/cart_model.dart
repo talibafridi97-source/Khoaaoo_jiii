@@ -1,60 +1,49 @@
 import 'food_model.dart';
 
 class CartItemModel {
-  final String id;
   final FoodModel foodItem;
   int quantity;
-  final List<String> selectedExtras;
-  final String instructions;
+  String selectedSize; // 'Regular', 'Medium', 'Large'
+  List<String> selectedAddons; // ['Extra Cheese', 'Extra Sauce', 'Extra Patty']
+  String cookingInstructions;
 
   CartItemModel({
-    required this.id,
     required this.foodItem,
     this.quantity = 1,
-    this.selectedExtras = const [],
-    this.instructions = '',
+    this.selectedSize = 'Regular',
+    this.selectedAddons = const [],
+    this.cookingInstructions = '',
   });
 
-  double get totalPrice {
-    double extrasPrice = selectedExtras.length * 50.0;
-    return (foodItem.price + extrasPrice) * quantity;
+  double get adjustedPrice {
+    double base = foodItem.price;
+    if (selectedSize == 'Medium') base += 150;
+    if (selectedSize == 'Large') base += 300;
+    for (var addon in selectedAddons) {
+      if (addon == 'Extra Cheese') base += 60;
+      if (addon == 'Extra Sauce') base += 30;
+      if (addon == 'Extra Patty') base += 180;
+    }
+    return base;
   }
+
+  double get totalPrice => adjustedPrice * quantity;
+
+  Map<String, dynamic> toJson() => {
+    'foodItem': foodItem.toJson(),
+    'quantity': quantity,
+    'selectedSize': selectedSize,
+    'selectedAddons': selectedAddons,
+    'cookingInstructions': cookingInstructions,
+  };
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      foodItem: FoodModel.fromJson(json['foodItem'] ?? {}),
-      quantity: json['quantity'] as int? ?? 1,
-      selectedExtras: json['selectedExtras'] != null
-          ? List<String>.from(json['selectedExtras'])
-          : [],
-      instructions: json['instructions'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'foodItem': foodItem.toJson(),
-      'quantity': quantity,
-      'selectedExtras': selectedExtras,
-      'instructions': instructions,
-    };
-  }
-
-  CartItemModel copyWith({
-    String? id,
-    FoodModel? foodItem,
-    int? quantity,
-    List<String>? selectedExtras,
-    String? instructions,
-  }) {
-    return CartItemModel(
-      id: id ?? this.id,
-      foodItem: foodItem ?? this.foodItem,
-      quantity: quantity ?? this.quantity,
-      selectedExtras: selectedExtras ?? this.selectedExtras,
-      instructions: instructions ?? this.instructions,
+      foodItem: FoodModel.fromJson(json['foodItem']),
+      quantity: json['quantity'] ?? 1,
+      selectedSize: json['selectedSize'] ?? 'Regular',
+      selectedAddons: List<String>.from(json['selectedAddons'] ?? []),
+      cookingInstructions: json['cookingInstructions'] ?? '',
     );
   }
 }

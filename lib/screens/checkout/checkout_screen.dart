@@ -12,124 +12,109 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
-
-  String selectedPaymentMethod = 'Cash on Delivery';
   final CartProvider _cartProvider = CartProvider();
   final SupabaseService _supabaseService = SupabaseService();
-  bool _isPlacingOrder = false;
+  final TextEditingController _nameController = TextEditingController(text: 'talibjan');
+  final TextEditingController _phoneController = TextEditingController(text: '+92 300 1234567');
+  final TextEditingController _addressController = TextEditingController(text: 'House No. 42, Main Bazaar, Kohat City');
+  final TextEditingController _voucherController = TextEditingController();
+  
+  String paymentMethod = 'Cash on Delivery';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cartProvider.addListener(_onCartChanged);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
-    _notesController.dispose();
+    _voucherController.dispose();
+    _cartProvider.removeListener(_onCartChanged);
     super.dispose();
   }
 
-  void _placeOrder() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isPlacingOrder = true;
-      });
+  void _onCartChanged() {
+    setState(() {});
+  }
 
-      final orderId = '#QB${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
-      
-      final order = OrderModel(
-        orderId: orderId,
-        items: _cartProvider.items,
-        totalAmount: _cartProvider.totalAmount,
-        deliveryAddress: _addressController.text.trim(),
-        status: 'Preparing',
-        timestamp: DateTime.now(),
-        paymentMethod: selectedPaymentMethod,
-      );
+  void _applyVoucher() {
+    String? error = _cartProvider.applyPromoCode(_voucherController.text);
+    if (error != null && error.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🎉 Promo code applied successfully!'), backgroundColor: Colors.green));
+    }
+  }
 
-      // Save to Supabase orders table with user entered name, phone & delivery notes
-      bool success = await _supabaseService.placeOrder(
-        order,
-        customerName: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        deliveryNotes: _notesController.text.trim(),
-      );
+  void _handlePlaceOrder() async {
+    if (_cartProvider.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your cart is empty')));
+      return;
+    }
 
-      if (!mounted) return;
+    setState(() => _isLoading = true);
 
-      setState(() {
-        _isPlacingOrder = false;
-      });
+    String orderId = '#QB${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    
+    OrderModel order = OrderModel(
+      orderId: orderId,
+      items: List.from(_cartProvider.items),
+      totalAmount: _cartProvider.totalAmount,
+      deliveryAddress: _addressController.text.trim(),
+      status: 'Preparing',
+      timestamp: DateTime.now(),
+      paymentMethod: paymentMethod,
+    );
 
-      if (!success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to place order. Please check database connection or RLS settings.')),
-        );
-        return;
-      }
+    bool success = await _supabaseService.placeOrder(
+      order,
+      customerName: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+    );
 
+    setState(() => _isLoading = false);
+
+    if (!mounted) return;
+
+    if (success) {
+      _cartProvider.clearCart();
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.deepOrange.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_circle, color: Colors.deepOrange, size: 60),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Order Placed Successfully!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Order $orderId',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepOrange),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Estimated Delivery Time: 25-35 mins\nSaved to Supabase Database!',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepOrange,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    onPressed: () {
-                      _cartProvider.clearCart();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const MainNavigation()),
-                        (route) => false,
-                      );
-                    },
-                    child: const Text('Track Order / Back to Home', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
+          title: const Column(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 12),
+              Text('Order Placed Successfully! 🎉', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
           ),
+          content: Text('Your order $orderId has been sent to Khoaaoo_jiii Restaurant. Live status syncing active!'),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainNavigation()),
+                  (route) => false,
+                );
+              },
+              child: const Text('View My Orders'),
+            ),
+          ],
         ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to place order. Please check connection.'), backgroundColor: Colors.red),
       );
     }
   }
@@ -139,180 +124,166 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Checkout', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Checkout & Vouchers 🎟️', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        elevation: 0,
         foregroundColor: Colors.black87,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Delivery Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  hintText: 'Enter your name',
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.deepOrange),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone_outlined, color: Colors.deepOrange),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: InputDecoration(
-                  labelText: 'Delivery Address',
-                  hintText: 'Enter your delivery address (e.g. Kohat)',
-                  prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.deepOrange),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                maxLines: 2,
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your address' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _notesController,
-                decoration: InputDecoration(
-                  labelText: 'Delivery Instructions (Optional)',
-                  hintText: 'e.g. Call upon arrival, extra spicy',
-                  prefixIcon: const Icon(Icons.note_alt_outlined, color: Colors.deepOrange),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Delivery Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Customer Name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _phoneController,
+              decoration: InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _addressController,
+              decoration: InputDecoration(labelText: 'Delivery Address', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+            ),
+            const SizedBox(height: 24),
 
-              const Text(
-                'Payment Method',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  children: [
-                    RadioListTile<String>(
-                      title: const Text('Cash on Delivery'),
-                      subtitle: const Text('Pay when you receive your order'),
-                      value: 'Cash on Delivery',
-                      groupValue: selectedPaymentMethod,
-                      activeColor: Colors.deepOrange,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedPaymentMethod = value!;
-                        });
-                      },
+            // Promo Code Voucher Section
+            const Text('Apply Voucher / Promo Code 🎟️', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _voucherController,
+                    decoration: InputDecoration(
+                      hintText: 'Try KHOAAOO20, FREEDEL, FIRST50',
+                      hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
-                    const Divider(height: 1),
-                    RadioListTile<String>(
-                      title: const Text('Online Payment (Card / JazzCash / EasyPaisa)'),
-                      subtitle: const Text('Coming soon'),
-                      value: 'Online Payment',
-                      groupValue: selectedPaymentMethod,
-                      activeColor: Colors.deepOrange,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedPaymentMethod = value!;
-                        });
-                      },
-                    ),
-                  ],
+                  ),
                 ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: _applyVoucher,
+                  child: const Text('Apply', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            if (_cartProvider.appliedPromoCode != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Applied: ${_cartProvider.appliedPromoCode}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                  TextButton(
+                    onPressed: () => _cartProvider.removePromoCode(),
+                    child: const Text('Remove', style: TextStyle(color: Colors.red, fontSize: 12)),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+            ],
+            const SizedBox(height: 24),
 
-              const Text(
-                'Order Summary',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Cash on Delivery', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Pay when you receive your order'),
+                    value: 'Cash on Delivery',
+                    groupValue: paymentMethod,
+                    activeColor: Colors.deepOrange,
+                    onChanged: (val) => setState(() => paymentMethod = val!),
+                  ),
+                  const Divider(height: 1),
+                  RadioListTile<String>(
+                    title: const Text('JazzCash / EasyPaisa', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Mobile wallet online transfer'),
+                    value: 'JazzCash / EasyPaisa',
+                    groupValue: paymentMethod,
+                    activeColor: Colors.deepOrange,
+                    onChanged: (val) => setState(() => paymentMethod = val!),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Items Total', style: TextStyle(color: Colors.grey)),
-                        Text('Rs. ${_cartProvider.subtotal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+            ),
+            const SizedBox(height: 24),
+
+            const Text('Order Summary', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Items Subtotal'),
+                      Text('Rs. ${_cartProvider.subtotalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Delivery Fee'),
+                      Text('Rs. ${_cartProvider.deliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  if (_cartProvider.discountAmount > 0) ...[
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Delivery Fee', style: TextStyle(color: Colors.grey)),
-                        Text('Rs. ${_cartProvider.deliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const Divider(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Total Amount', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text(
-                          'Rs. ${_cartProvider.totalAmount.toStringAsFixed(0)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.deepOrange),
-                        ),
+                        const Text('Discount Voucher', style: TextStyle(color: Colors.green)),
+                        Text('- Rs. ${_cartProvider.discountAmount.toStringAsFixed(0)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Rs. ${_cartProvider.totalAmount.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+                    ],
                   ),
-                  onPressed: _isPlacingOrder ? null : _placeOrder,
-                  child: _isPlacingOrder
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Place Order',
-                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: _isLoading ? null : _handlePlaceOrder,
+                child: _isLoading
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text('Place Order • Rs. ${_cartProvider.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
         ),
       ),
     );
