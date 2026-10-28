@@ -20,6 +20,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _voucherController = TextEditingController();
   
   String paymentMethod = 'Cash on Delivery';
+  String deliveryTimeSlot = 'Deliver Now (25-35 mins)';
   bool _isLoading = false;
 
   @override
@@ -40,6 +41,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _onCartChanged() {
     setState(() {});
+  }
+
+  // Feature 4: GPS Current Location Simulation
+  void _useCurrentGpsLocation() {
+    setState(() {
+      _addressController.text = 'GPS Verified: Kohat University Road, Sector 3, Kohat (Lat: 33.58, Lng: 71.44)';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('📍 Current GPS Location fetched successfully!'), backgroundColor: Colors.green),
+    );
   }
 
   void _applyVoucher() {
@@ -65,7 +76,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       orderId: orderId,
       items: List.from(_cartProvider.items),
       totalAmount: _cartProvider.totalAmount,
-      deliveryAddress: _addressController.text.trim(),
+      deliveryAddress: '${_addressController.text.trim()} [Time: $deliveryTimeSlot]',
       status: 'Preparing',
       timestamp: DateTime.now(),
       paymentMethod: paymentMethod,
@@ -95,7 +106,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text('Order Placed Successfully! 🎉', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text('Your order $orderId has been sent to Khoaaoo_jiii Restaurant. Live status syncing active!'),
+          content: Text('Your order $orderId has been scheduled for: $deliveryTimeSlot. Live status syncing active!'),
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
@@ -124,7 +135,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Checkout & Vouchers 🎟️', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Checkout, GPS & Schedule 🚀', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
@@ -148,7 +159,53 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _addressController,
-              decoration: InputDecoration(labelText: 'Delivery Address', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+              decoration: InputDecoration(
+                labelText: 'Delivery Address',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.my_location, color: Colors.deepOrange),
+                  tooltip: 'Use Current GPS Location',
+                  onPressed: _useCurrentGpsLocation,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _useCurrentGpsLocation,
+                icon: const Icon(Icons.gps_fixed, size: 16, color: Colors.deepOrange),
+                label: const Text('📍 Use Current GPS Location', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Feature 5: Scheduled Orders / Pre-ordering Time Slot Picker
+            const Text('Schedule Delivery Time ⏰', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Deliver Now (25-35 mins)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Standard fresh & hot delivery'),
+                    value: 'Deliver Now (25-35 mins)',
+                    groupValue: deliveryTimeSlot,
+                    activeColor: Colors.deepOrange,
+                    onChanged: (val) => setState(() => deliveryTimeSlot = val!),
+                  ),
+                  const Divider(height: 1),
+                  RadioListTile<String>(
+                    title: const Text('Schedule for Later (Tonight 8:00 PM)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Pre-order in advance'),
+                    value: 'Schedule for Tonight 8:00 PM',
+                    groupValue: deliveryTimeSlot,
+                    activeColor: Colors.deepOrange,
+                    onChanged: (val) => setState(() => deliveryTimeSlot = val!),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 

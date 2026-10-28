@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../chat/live_chat_screen.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
@@ -28,12 +29,72 @@ class OrderTrackingScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.deepOrange),
+            tooltip: 'Live Chat with Manager',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LiveChatScreen(orderId: orderId)),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Feature 2: Rider Live Map Radar / Info Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [Colors.deepOrange.shade500, Colors.orange.shade600]),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.delivery_dining, size: 36, color: Colors.deepOrange),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Assigned Delivery Rider', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        const SizedBox(height: 2),
+                        const Text('Rider Ali (Honda 125 • KHT-786)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 14),
+                            const SizedBox(width: 4),
+                            const Text('4.9 (120+ deliveries)', style: TextStyle(color: Colors.white, fontSize: 11)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      icon: const Icon(Icons.phone, color: Colors.deepOrange, size: 20),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling Rider Ali (+92 300 9876543)...')));
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Order Summary Card
             Container(
               padding: const EdgeInsets.all(16),
@@ -85,11 +146,21 @@ class OrderTrackingScreen extends StatelessWidget {
                     ],
                   ),
                   const Divider(height: 24),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Live Status Sync', style: TextStyle(color: Colors.grey)),
-                      Text('Connected with Supabase', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green)),
+                      const Text('Live Status Sync', style: TextStyle(color: Colors.grey)),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: Colors.deepOrange),
+                        icon: const Icon(Icons.chat, size: 16),
+                        label: const Text('Live Chat with Manager'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LiveChatScreen(orderId: orderId)),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ],
