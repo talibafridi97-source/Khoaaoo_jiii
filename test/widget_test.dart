@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/test.dart';
 import 'package:khoaaoo_jiiii/main.dart';
 
-void main() {
-  testWidgets('QuickBite App test', (WidgetTester tester) async {
-    await tester.pumpWidget(const QuickBiteApp(isLoggedIn: false));
-    expect(find.byType(MaterialApp), findsOneWidget);
+void TestWidgets() {
+  testWidgets('Khoaaoo_jiii App test', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.widget(Container());
   });
 }

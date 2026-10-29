@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
 import '../home/main_navigation.dart';
 import 'signup_screen.dart';
+import '../../services/auth_service.dart';
 import '../../admin/screens/admin_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,8 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _obscurePassword = true;
   final AuthService _authService = AuthService();
 
   @override
@@ -32,7 +32,11 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
 
-      String? error = await _authService.login(_emailController.text.trim(), _passwordController.text);
+      String? error = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -45,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${error.contains("Invalid") || error.contains("credentials") ? "Invalid email or password" : error}')),
+          SnackBar(content: Text('Login failed: $error'), backgroundColor: Colors.red),
         );
       }
     }
@@ -64,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // App Logo / Icon
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -72,33 +77,38 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: const Icon(Icons.fastfood, size: 64, color: Colors.deepOrange),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   const Text(
-                    'Welcome to QuickBite! 🍔',
+                    'Welcome to Khoaaoo_jiii! 🍔',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Login to your account to order delicious food',
+                    'Sign in to order delicious hotel food',
                     style: TextStyle(color: Colors.grey, fontSize: 14),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
+
+                  // Email Field
                   TextFormField(
                     controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email or Username',
+                      labelText: 'Email Address',
                       hintText: 'Enter your email',
                       prefixIcon: const Icon(Icons.email_outlined, color: Colors.deepOrange),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Colors.deepOrange, width: 2),
-                      ),
                     ),
-                    validator: (value) => value == null || value.isEmpty ? 'Please enter email' : null,
+                    validator: (value) {
+                      if (value == null || value.isEmpty || !value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16),
+
+                  // Password Field
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
@@ -115,19 +125,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Colors.deepOrange, width: 2),
-                      ),
                     ),
-                    validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 24),
+
+                  // Login Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepOrange,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         elevation: 2,
@@ -141,17 +155,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             )
                           : const Text(
                               'Login',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // Navigate to Signup
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
-                      GestureDetector(
-                        onTap: () {
+                      const Text("Don't have an account?", style: TextStyle(color: Colors.grey)),
+                      TextButton(
+                        onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => const SignupScreen()),
@@ -164,17 +180,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
-                  // Admin Portal Link
-                  TextButton.icon(
+                  const SizedBox(height: 10),
+
+                  // Admin Portal Button
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.deepOrange),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.admin_panel_settings, color: Colors.deepOrange),
+                    label: const Text('Restaurant Admin Portal', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
                       );
                     },
-                    icon: const Icon(Icons.admin_panel_settings, color: Colors.grey, size: 18),
-                    label: const Text('Restaurant Owner? Admin Portal', style: TextStyle(color: Colors.grey, fontSize: 13)),
                   ),
                 ],
               ),

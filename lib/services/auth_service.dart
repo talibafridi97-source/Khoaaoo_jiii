@@ -1,63 +1,55 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthService extends ChangeNotifier {
-  static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
-  AuthService._internal();
+class AuthService {
+  final _client = Supabase.instance.client;
 
-  final _supabase = Supabase.instance.client;
-
-  bool get isLoggedIn => _supabase.auth.currentSession != null;
-
-  String get currentUserName {
-    final user = _supabase.auth.currentUser;
-    if (user != null && user.userMetadata != null) {
-      return user.userMetadata?['full_name'] ?? 'User';
-    }
-    return 'Talib Nawaz';
-  }
-
-  String get currentUserEmail {
-    final user = _supabase.auth.currentUser;
-    return user?.email ?? 'talib@quickbite.pk';
-  }
-
-  Future<String?> login(String email, String password) async {
+  // Sign up with Supabase Auth
+  Future<String?> signup(String email, String password, String name) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      notifyListeners();
-      return response.session != null ? null : 'Login failed';
-    } catch (e) {
-      print('Supabase Login Error: $e');
-      return e.toString();
-    }
-  }
-
-  Future<String?> signup(String name, String email, String password) async {
-    try {
-      final response = await _supabase.auth.signUp(
+      final response = await _client.auth.signUp(
         email: email,
         password: password,
         data: {'full_name': name},
       );
-      notifyListeners();
-      return response.user != null ? null : 'Signup failed';
+      if (response.user != null) {
+        return null; // Success
+      }
+      return 'Signup failed';
     } catch (e) {
-      print('Supabase Signup Error: $e');
       return e.toString();
     }
   }
 
-  Future<void> logout() async {
+  // Login with Supabase Auth
+  Future<String?> login(String email, String password) async {
     try {
-      await _supabase.auth.signOut();
-      notifyListeners();
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      if (response.user != null) {
+        return null; // Success
+      }
+      return 'Login failed';
     } catch (e) {
-      print('Supabase Logout Error: $e');
+      return e.toString();
     }
+  }
+
+  // Logout
+  Future<void> logout() async {
+    await _client.auth.signOut();
+  }
+
+  // Get current user email
+  String get currentUserEmail => _client.auth.currentUser?.email ?? 'talib@khoaaoojiii.pk';
+
+  // Get current user name
+  String get currentUserName {
+    final user = _client.auth.currentUser;
+    if (user?.userMetadata != null && user!.userMetadata!['full_name'] != null) {
+      return user.userMetadata!['full_name'];
+    }
+    return 'talibjan';
   }
 }
