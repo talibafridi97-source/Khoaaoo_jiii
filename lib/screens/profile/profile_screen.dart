@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/theme_service.dart';
+import '../../services/language_service.dart';
 import '../auth/login_screen.dart';
 import '../orders/my_orders_screen.dart';
 import '../favorites/favorites_screen.dart';
@@ -18,13 +19,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final ThemeService _themeService = ThemeService();
+  final LanguageService _languageService = LanguageService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('My Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_languageService.translate('My Profile'), style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black87,
@@ -92,13 +94,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: SwitchListTile(
                 secondary: const Icon(Icons.dark_mode, color: Colors.deepOrange),
-                title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                title: Text(_languageService.translate('Dark Mode'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 subtitle: const Text('Switch between Light and Dark theme', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 value: _themeService.isDarkMode,
-                activeThumbColor: Colors.deepOrange,
+                activeColor: Colors.deepOrange,
                 onChanged: (val) {
                   setState(() {
                     _themeService.toggleTheme(val);
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Language Toggle Card (English / Urdu)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 6),
+                ],
+              ),
+              child: SwitchListTile(
+                secondary: const Icon(Icons.language, color: Colors.deepOrange),
+                title: Text(_languageService.translate('Language (English / اردو)'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                subtitle: Text(_languageService.isUrdu ? 'Current: اردو (Urdu)' : 'Current: English', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                value: _languageService.isUrdu,
+                activeColor: Colors.deepOrange,
+                onChanged: (val) {
+                  setState(() {
+                    _languageService.toggleLanguage(val);
                   });
                 },
               ),
@@ -153,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _buildProfileOption(
                     icon: Icons.receipt_long_outlined,
-                    title: 'My Orders',
+                    title: _languageService.translate('My Orders'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const MyOrdersScreen()));
                     },
@@ -161,7 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.favorite_border,
-                    title: 'Favorite Items',
+                    title: _languageService.translate('My Favorites ❤️'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoritesScreen()));
                     },
@@ -169,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.payment_outlined,
-                    title: 'Payment Methods',
+                    title: _languageService.translate('Payment Methods'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()));
                     },
@@ -177,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.settings_outlined,
-                    title: 'Settings & Notifications',
+                    title: _languageService.translate('Settings & Notifications'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
                     },
@@ -185,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const Divider(height: 1),
                   _buildProfileOption(
                     icon: Icons.help_outline,
-                    title: 'Help & Support',
+                    title: _languageService.translate('Help & Support'),
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpSupportScreen()));
                     },
@@ -213,9 +240,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     (route) => false,
                   );
                 },
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                child: Text(
+                  _languageService.translate('Logout'),
+                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),
