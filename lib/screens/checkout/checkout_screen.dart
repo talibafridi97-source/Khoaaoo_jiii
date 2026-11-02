@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/supabase_service.dart';
+import '../../services/loyalty_service.dart';
 import '../../models/order_model.dart';
 import '../home/main_navigation.dart';
 
@@ -14,6 +15,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final CartProvider _cartProvider = CartProvider();
   final SupabaseService _supabaseService = SupabaseService();
+  final LoyaltyService _loyaltyService = LoyaltyService();
   final TextEditingController _nameController = TextEditingController(text: 'talibjan');
   final TextEditingController _phoneController = TextEditingController(text: '+92 300 1234567');
   final TextEditingController _addressController = TextEditingController(text: 'House No. 42, Main Bazaar, Kohat City');
@@ -27,6 +29,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     _cartProvider.addListener(_onCartChanged);
+    _loyaltyService.addListener(_onCartChanged);
   }
 
   @override
@@ -36,6 +39,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _addressController.dispose();
     _voucherController.dispose();
     _cartProvider.removeListener(_onCartChanged);
+    _loyaltyService.removeListener(_onCartChanged);
     super.dispose();
   }
 
@@ -43,7 +47,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {});
   }
 
-  // Feature 4: GPS Current Location Simulation
+  double get totalWithLoyalty {
+    double total = _cartProvider.totalAmount - _loyaltyService.redeemableDiscount;
+    return total < 0 ? 0 : total;
+  }
+
   void _useCurrentGpsLocation() {
     setState(() {
       _addressController.text = 'GPS Verified: Kohat University Road, Sector 3, Kohat (Lat: 33.58, Lng: 71.44)';
@@ -75,7 +83,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     OrderModel order = OrderModel(
       orderId: orderId,
       items: List.from(_cartProvider.items),
-      totalAmount: _cartProvider.totalAmount,
+      totalAmount: totalWithLoyalty,
       deliveryAddress: '${_addressController.text.trim()} [Time: $deliveryTimeSlot]',
       status: 'Preparing',
       timestamp: DateTime.now(),
@@ -87,6 +95,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       customerName: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
     );
+
+    if (success) {
+      // Award loyalty coins (10% of order total) and deduct redeemed coins
+      int earnedCoins = (_cartProvider.subtotalAmount * 0.1).toInt();
+      _loyaltyService.addPoints(earnedCoins);
+      _loyaltyService.deductPointsAfterOrder();
+    }
 
     setState(() => _isLoading = false);
 
@@ -106,7 +121,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text('Order Placed Successfully! 🎉', textAlign: TextAlign.center, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text('Your order $orderId has been scheduled for: $deliveryTimeSlot. Live status syncing active!'),
+          content: Text('Your order $orderId has been placed! You earned loyalty coins on this order.'),
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white),
@@ -135,7 +150,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Checkout, GPS & Schedule 🚀', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Checkout & Rewards Wallet 🪙', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
@@ -180,7 +195,49 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Feature 5: Scheduled Orders / Pre-ordering Time Slot Picker
+            // Loyalty Points Wallet Redemption Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [Colors.amber.shade700, Colors.orange.shade800]),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.monetization_on, color: Colors.white, size: 24),
+                          SizedBox(width: 8),
+                          Text('Khoaaoo Coins Wallet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
+                      ),
+                      Text('${_loyaltyService.points} Coins', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Available discount value: Rs. ${_loyaltyService.points / 10.0}', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                  const Divider(color: Colors.white30, height: 20),
+                  CheckboxListTile(
+                    title: const Text('Redeem loyalty coins for discount', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    value: _loyaltyService.isRedeeming,
+                    activeColor: Colors.white,
+                    checkColor: Colors.deepOrange,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (val) {
+                      _loyaltyService.toggleRedeem(val ?? false);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Schedule Delivery Time
             const Text('Schedule Delivery Time ⏰', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 10),
             Container(
@@ -313,12 +370,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ],
                     ),
                   ],
+                  if (_loyaltyService.isRedeeming) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Coins Discount', style: TextStyle(color: Colors.amber)),
+                        Text('- Rs. ${_loyaltyService.redeemableDiscount.toStringAsFixed(0)}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
                   const Divider(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text('Rs. ${_cartProvider.totalAmount.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepOrange)),
+                      Text('Rs. ${totalWithLoyalty.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepOrange)),
                     ],
                   ),
                 ],
@@ -337,7 +404,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 onPressed: _isLoading ? null : _handlePlaceOrder,
                 child: _isLoading
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text('Place Order • Rs. ${_cartProvider.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    : Text('Place Order • Rs. ${totalWithLoyalty.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/theme_service.dart';
 import '../../services/language_service.dart';
+import '../../services/loyalty_service.dart';
 import '../auth/login_screen.dart';
 import '../orders/my_orders_screen.dart';
 import '../favorites/favorites_screen.dart';
@@ -20,6 +21,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final ThemeService _themeService = ThemeService();
   final LanguageService _languageService = LanguageService();
+  final LoyaltyService _loyaltyService = LoyaltyService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loyaltyService.addListener(_onLoyaltyChanged);
+  }
+
+  @override
+  void dispose() {
+    _loyaltyService.removeListener(_onLoyaltyChanged);
+    super.dispose();
+  }
+
+  void _onLoyaltyChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +98,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // Loyalty Coins Wallet Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [Colors.amber.shade700, Colors.orange.shade800]),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.monetization_on, color: Colors.white, size: 30),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Khoaaoo Coins Wallet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                          SizedBox(height: 2),
+                          Text('Earn coins on every order!', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '🪙 ${_loyaltyService.points}',
+                      style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Dark Mode Toggle Card
             Container(
