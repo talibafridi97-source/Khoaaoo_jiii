@@ -6,6 +6,7 @@ import '../../widgets/offer_card.dart';
 import '../../widgets/food_card.dart';
 import '../food_details/food_details_screen.dart';
 import '../cart/cart_screen.dart';
+import '../profile/profile_screen.dart';
 import '../../providers/cart_provider.dart';
 import '../../services/supabase_service.dart';
 
@@ -34,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Auto-reload menu items whenever navigating back to HomeScreen
     _loadFoodItems();
   }
 
@@ -164,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               const SizedBox(width: 10),
+                              // Profile Icon Button (Navigates to ProfileScreen)
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.deepOrange.withOpacity(0.1),
@@ -171,9 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 child: IconButton(
                                   icon: const Icon(Icons.person, color: Colors.deepOrange),
+                                  tooltip: 'My Profile',
                                   onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Profile tapped')),
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
                                     );
                                   },
                                 ),
@@ -361,7 +364,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       SnackBar(content: Text('Added ${food.name} to cart!')),
                                     );
                                   },
-                                  onFavoritePressed: () {
+                                  onFavoritePressed: () async {
+                                    bool newFav = !food.isFavorite;
+                                    await _supabaseService.toggleFavorite(food.id, newFav);
                                     setState(() {
                                       int originalIndex = foodList.indexWhere((item) => item.id == food.id);
                                       if (originalIndex != -1) {
