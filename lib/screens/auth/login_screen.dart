@@ -3,6 +3,7 @@ import '../home/main_navigation.dart';
 import 'signup_screen.dart';
 import '../../services/auth_service.dart';
 import '../../admin/screens/admin_login_screen.dart';
+import '../../rider/screens/rider_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -68,7 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // App Logo / Icon
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -182,21 +182,42 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  // Admin Portal Button
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.deepOrange),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.admin_panel_settings, color: Colors.deepOrange),
-                    label: const Text('Restaurant Admin Portal', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
-                      );
-                    },
+                  // Portals Row (Admin & Rider)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.deepOrange),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.admin_panel_settings, color: Colors.deepOrange, size: 18),
+                        label: const Text('Admin Portal', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold, fontSize: 13)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.green),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.delivery_dining, color: Colors.green, size: 18),
+                        label: const Text('Rider Portal', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const RiderLoginScreen()),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
