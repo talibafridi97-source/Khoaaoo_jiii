@@ -42,6 +42,7 @@ class _RiderPortalScreenState extends State<RiderPortalScreen> {
           itemsSummary: json['items_summary'] ?? 'Khoaaoo_jiii Order',
           customerName: json['customer_name'] ?? 'Valued Customer',
           phone: json['phone'] ?? 'N/A',
+          assignedRider: json['assigned_rider'] ?? 'Unassigned',
         );
       }).toList();
 
@@ -62,12 +63,12 @@ class _RiderPortalScreenState extends State<RiderPortalScreen> {
     });
   }
 
-  Future<void> _markAsDelivered(String orderId) async {
-    await _supabaseService.updateOrderStatus(orderId, 'Delivered');
+  Future<void> _updateStatus(String orderId, String newStatus) async {
+    await _supabaseService.updateOrderStatus(orderId, newStatus);
     _loadRiderOrders();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Order $orderId marked as Delivered! 🎉'), backgroundColor: Colors.green),
+      SnackBar(content: Text('Order $orderId status updated to: $newStatus! 🚀'), backgroundColor: Colors.deepOrange),
     );
   }
 
@@ -78,7 +79,7 @@ class _RiderPortalScreenState extends State<RiderPortalScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Delivery Rider Portal 🏍️', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Delivery Rider Portal (Fleet Dispatch) 🏍️', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 1,
@@ -148,19 +149,36 @@ class _RiderPortalScreenState extends State<RiderPortalScreen> {
                           Text('Delivery Address: ${order.deliveryAddress}', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
                           const SizedBox(height: 8),
                           Text('Cash to Collect: Rs. ${order.totalAmount.toStringAsFixed(0)} (${order.paymentMethod})', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const SizedBox(height: 8),
+                          Text('Assigned Rider: ${order.assignedRider}', style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.bold, fontSize: 13)),
                           const Divider(height: 20),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.blue),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () => _updateStatus(order.orderId, 'Out for Delivery (On the Way)'),
+                                  child: const Text('Start Delivery 🚀', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                                ),
                               ),
-                              onPressed: () => _markAsDelivered(order.orderId),
-                              child: const Text('Mark as Delivered 🏁', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () => _updateStatus(order.orderId, 'Delivered'),
+                                  child: const Text('Delivered 🏁', style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

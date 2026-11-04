@@ -5,12 +5,13 @@ class OrderModel {
   final List<CartItemModel> items;
   final double totalAmount;
   final String deliveryAddress;
-  final String status; // 'Pending', 'Preparing', 'On the Way', 'Delivered', 'Cancelled'
+  final String status; // 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'
   final DateTime timestamp;
-  final String paymentMethod; // 'Cash on Delivery', 'Credit Card'
+  final String paymentMethod;
   final String itemsSummary;
   final String customerName;
   final String phone;
+  final String assignedRider;
 
   OrderModel({
     required this.orderId,
@@ -23,6 +24,7 @@ class OrderModel {
     this.itemsSummary = '',
     this.customerName = '',
     this.phone = '',
+    this.assignedRider = 'Unassigned',
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,7 @@ class OrderModel {
       itemsSummary: json['items_summary'] ?? '',
       customerName: json['customer_name'] ?? '',
       phone: json['phone'] ?? '',
+      assignedRider: json['assigned_rider'] ?? 'Unassigned',
     );
   }
 
@@ -58,6 +61,7 @@ class OrderModel {
       'items_summary': itemsSummary,
       'customer_name': customerName,
       'phone': phone,
+      'assigned_rider': assignedRider,
     };
   }
 }

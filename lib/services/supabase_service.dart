@@ -5,7 +5,6 @@ import '../models/order_model.dart';
 class SupabaseService {
   final _client = Supabase.instance.client;
 
-  // Fetch food items from Supabase food_items table with bulletproof column mapping
   Future<List<FoodModel>> fetchFoodItems() async {
     try {
       final response = await _client.from('food_items').select();
@@ -28,7 +27,6 @@ class SupabaseService {
     }
   }
 
-  // Toggle favorite in Supabase
   Future<void> toggleFavorite(String foodId, bool isFavorite) async {
     try {
       await _client.from('food_items').update({'is_favorite': isFavorite}).eq('id', foodId);
@@ -37,7 +35,6 @@ class SupabaseService {
     }
   }
 
-  // Save order to Supabase orders table with items summary
   Future<bool> placeOrder(OrderModel order, {required String customerName, required String phone, String deliveryNotes = ''}) async {
     try {
       String itemsSummary = order.items.isNotEmpty
@@ -54,6 +51,7 @@ class SupabaseService {
         'status': order.status,
         'timestamp': order.timestamp.toIso8601String(),
         'items_summary': itemsSummary,
+        'assigned_rider': 'Unassigned',
       });
       return true;
     } catch (e) {
@@ -69,7 +67,6 @@ class SupabaseService {
     return address;
   }
 
-  // Fetch orders from Supabase orders table
   Future<List<OrderModel>> fetchOrders() async {
     try {
       final response = await _client.from('orders').select();
@@ -87,6 +84,7 @@ class SupabaseService {
           itemsSummary: json['items_summary'] ?? 'Delicious Khoaaoo_jiii Meal',
           customerName: json['customer_name'] ?? 'Valued Customer',
           phone: json['phone'] ?? 'N/A',
+          assignedRider: json['assigned_rider'] ?? 'Unassigned',
         );
       }).toList();
     } catch (e) {
@@ -95,7 +93,6 @@ class SupabaseService {
     }
   }
 
-  // Update order status in Supabase orders table
   Future<bool> updateOrderStatus(String orderId, String newStatus) async {
     try {
       await _client.from('orders').update({'status': newStatus}).eq('order_id', orderId);
@@ -106,7 +103,16 @@ class SupabaseService {
     }
   }
 
-  // Delete order from Supabase orders table
+  Future<bool> assignRiderToOrder(String orderId, String riderName) async {
+    try {
+      await _client.from('orders').update({'assigned_rider': riderName, 'status': 'Out for Delivery'}).eq('order_id', orderId);
+      return true;
+    } catch (e) {
+      print('Error assigning rider: $e');
+      return false;
+    }
+  }
+
   Future<bool> deleteOrder(String orderId) async {
     try {
       await _client.from('orders').delete().eq('order_id', orderId);
